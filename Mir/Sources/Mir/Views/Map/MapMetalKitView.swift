@@ -17,6 +17,7 @@ struct MapMetalKitView: UIViewRepresentable {
     
     func makeUIView(context: Context) -> some UIView {
         let view = MTKView()
+        view.device = context.coordinator.device
         view.delegate = context.coordinator
         return view
     }
@@ -38,6 +39,7 @@ struct MapMetalKitView: NSViewRepresentable {
     
     func makeNSView(context: Context) -> some NSView {
         let view = MTKView()
+        view.device = context.coordinator.device
         view.delegate = context.coordinator
         return view
     }
