@@ -21,7 +21,7 @@ struct MapMetalKitView: UIViewRepresentable {
         return view
     }
     
-    func updateUIView(_ uiView: UIViewType, context: Context) { }
+    func updateUIView(_ uiView: UIViewType, context: Context) {}
     
     // MARK: Providing a custom coordinator object
     
@@ -42,7 +42,7 @@ struct MapMetalKitView: NSViewRepresentable {
         return view
     }
     
-    func updateNSView(_ nsView: NSViewType, context: Context) { }
+    func updateNSView(_ nsView: NSViewType, context: Context) {}
     
     // MARK: Providing a custom coordinator object
     
