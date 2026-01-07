@@ -27,7 +27,16 @@ struct MapMetalKitView: UIViewRepresentable {
     // MARK: Providing a custom coordinator object
     
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        let coordinator = Coordinator()
+        let device = MTLCreateSystemDefaultDevice()
+        coordinator.device = device
+        guard let device else { return coordinator }
+        if device.supportsFamily(.metal4) {
+            coordinator.renderer = MapMetal4Renderer(device: device)
+        } else {
+            coordinator.renderer = MapMetalRenderer(device: device)
+        }
+        return coordinator
     }
 }
 #elseif canImport(AppKit)
@@ -49,7 +58,16 @@ struct MapMetalKitView: NSViewRepresentable {
     // MARK: Providing a custom coordinator object
     
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        let coordinator = Coordinator()
+        let device = MTLCreateSystemDefaultDevice()
+        coordinator.device = device
+        guard let device else { return coordinator }
+        if device.supportsFamily(.metal4) {
+            coordinator.renderer = MapMetal4Renderer(device: device)
+        } else {
+            coordinator.renderer = MapMetalRenderer(device: device)
+        }
+        return coordinator
     }
 }
 #endif
