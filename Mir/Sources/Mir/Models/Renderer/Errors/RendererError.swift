@@ -8,7 +8,7 @@
 import Foundation
 
 /// Errors that can occur while configuring/compiling a renderer.
-enum RendererError: Error {
+enum RendererError: LocalizedError {
 
     case missingVertexFunction(name: String)
     case missingFragmentFunction(name: String)
