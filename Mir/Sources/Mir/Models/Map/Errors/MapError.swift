@@ -12,6 +12,8 @@ struct MapError: LocalizedError {
     enum Kind {
         /// The required Metal device could not be obtained (e.g. `MTLCreateSystemDefaultDevice()` returned nil).
         case deviceUnavailable
+        /// The renderer could not be created or initialized.
+        case rendererUnavailable
     }
     
     // MARK: - Properties
@@ -37,6 +39,8 @@ struct MapError: LocalizedError {
         switch kind {
         case .deviceUnavailable:
             return "Metal is not available on this device."
+        case .rendererUnavailable:
+            return "The renderer could not be created."
         }
     }
 }
