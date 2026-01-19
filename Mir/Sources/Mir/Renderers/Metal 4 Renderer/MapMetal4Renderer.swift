@@ -28,6 +28,10 @@ final class MapMetal4Renderer: Renderer {
     
     // MARK: - Renderer
     
+    func compileRenderPipeline(colorPixelFormat: MTLPixelFormat) throws {
+        
+    }
+    
     func renderFrame(to view: MTKView) {
         guard
             let renderPassDescriptor = view.currentMTL4RenderPassDescriptor,
