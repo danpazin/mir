@@ -90,6 +90,7 @@ final class MapErrorView: UIView {
     private func setUpConstraints() {
         title.translatesAutoresizingMaskIntoConstraints = false
         message.translatesAutoresizingMaskIntoConstraints = false
+        message.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         let contentInset: CGFloat = 16.0
         let spacing: CGFloat = 8.0
         NSLayoutConstraint.activate([
