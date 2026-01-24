@@ -10,6 +10,8 @@ import MetalKit
 @MainActor
 protocol Renderer: AnyObject {
 
+    // MARK: - Create a Render Pipeline
+    
     /// Compiles (or recompiles) the Metal render pipeline state the renderer needs to draw.
     ///
     /// - Parameter colorPixelFormat: The pixel format of the render target’s color attachment
