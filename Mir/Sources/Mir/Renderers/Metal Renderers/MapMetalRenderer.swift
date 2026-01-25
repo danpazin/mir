@@ -56,7 +56,7 @@ final class MapMetalRenderer: Renderer {
         renderEncoder.setRenderPipelineState(renderPipelineState)
         renderEncoder.setVertexBuffer(mesh.vertexBuffers[0].buffer, offset: 0, index: 0) // temp
         let submesh = mesh.submeshes.first! // temp
-        // Draw the triangle
+        // Draw the sphere
         renderEncoder.drawIndexedPrimitives(
             type: .triangle,
             indexCount: submesh.indexCount,
