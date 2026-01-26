@@ -16,10 +16,40 @@ extension MapMetalKitView {
         // MARK: - Properties
 
         /// The Metal device used for rendering.
-        var device: MTLDevice?
+        private(set) var device: MTLDevice?
 
         /// The renderer responsible for drawing the map.
-        var renderer: (any Renderer)?
+        private(set) var renderer: (any Renderer)?
+
+        /// An error that occurred during setup, if any.
+        private(set) var error: Error?
+
+        // MARK: - Initializers
+
+        override init() {
+            super.init()
+            setUpDevice()
+            setUpRenderer()
+        }
+
+        // MARK: - Create Resources
+
+        private func setUpDevice() {
+            guard let device = MTLCreateSystemDefaultDevice() else {
+                error = MapError(kind: .deviceUnavailable)
+                return
+            }
+            self.device = device
+        }
+
+        private func setUpRenderer() {
+            guard let device else { return }
+            if device.supportsFamily(.metal4) {
+                renderer = MapMetal4Renderer(device: device)
+            } else {
+                renderer = MapMetalRenderer(device: device)
+            }
+        }
 
         // MARK: - MTKViewDelegate
 
