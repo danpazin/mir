@@ -10,16 +10,18 @@ import MetalKit
 @MainActor
 protocol Renderer: AnyObject {
 
-    // MARK: - Create a Render Pipeline
-    
-    /// Compiles (or recompiles) the Metal render pipeline state the renderer needs to draw.
+    /// Creates a new renderer instance configured for the specified Metal view.
     ///
-    /// - Parameter colorPixelFormat: The pixel format of the render target’s color attachment
-    ///   (typically `MTKView.colorPixelFormat`).
-    /// - Throws: A renderer-specific error if the pipeline can’t be created (for example, missing
-    ///   shader functions, an invalid pipeline descriptor, or a Metal compilation failure).
-    func compileRenderPipeline(colorPixelFormat: MTLPixelFormat) throws
-
+    /// - Parameter view: The Metal view that provides:
+    ///   - The Metal device used for rendering
+    ///   - Drawable properties like pixel format and sample count
+    ///   - The initial drawable size
+    ///
+    /// - Throws: An error if renderer initialization fails, such as:
+    ///   - Missing or incompatible Metal device
+    ///   - Failed resource creation (pipeline states, buffers, etc.)
+    init(view: MTKView) throws
+    
     /// Instructs the renderer to draw a frame for a view.
     ///
     /// - Parameter view: A view the renderer draws to, which provides:
