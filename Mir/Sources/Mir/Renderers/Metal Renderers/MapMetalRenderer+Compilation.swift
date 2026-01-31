@@ -24,7 +24,8 @@ extension MapMetalRenderer {
     ///   functions in the default library or an incompatible render pipeline descriptor.
     func compileRenderPipeline(colorPixelFormat: MTLPixelFormat) throws {
         let renderPipelineDescriptor = try configureRenderPipeline(colorPixelFormat: colorPixelFormat)
-        renderPipelineState = try device.makeRenderPipelineState(descriptor: renderPipelineDescriptor)
+        let renderPipelineState = try device.makeRenderPipelineState(descriptor: renderPipelineDescriptor)
+        self.renderPipelineState = renderPipelineState
     }
     
     /// Configures and returns a render pipeline descriptor for the renderer.
