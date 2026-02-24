@@ -16,6 +16,9 @@ let package = Package(
             targets: ["Mir"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin.git", from: "1.0.0")
+    ],
     targets: [
         .target(
             name: "Mir"
