@@ -7,6 +7,15 @@
 
 import SwiftUI
 
+/// A view that displays an interactive map.
+///
+/// The following example displays a map:
+///
+/// ```swift
+/// var body: some View {
+///     Map()
+/// }
+/// ```
 public struct Map: View {
     
     public init() {}
