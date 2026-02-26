@@ -79,6 +79,7 @@ final class MapMetal4Renderer: Renderer {
         // Bind vertex buffer GPU address at index 0 (matches shader layout)
         argumentTable.setAddress(mesh.vertexBuffers[0].buffer.gpuAddress, index: 0)
         renderEncoder.setArgumentTable(argumentTable, stages: .vertex)
+        renderEncoder.setTriangleFillMode(.lines) // temp
         // Draw the first submesh (temporary)
         if let submesh = mesh.submeshes.first {
             renderEncoder.drawIndexedPrimitives(

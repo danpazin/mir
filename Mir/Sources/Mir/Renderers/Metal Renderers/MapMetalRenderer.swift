@@ -55,6 +55,7 @@ final class MapMetalRenderer: Renderer {
         // Configure the encoder with the renderer's main pipeline state.
         renderEncoder.setRenderPipelineState(renderPipelineState)
         renderEncoder.setVertexBuffer(mesh.vertexBuffers[0].buffer, offset: 0, index: 0) // temp
+        renderEncoder.setTriangleFillMode(.lines) // temp
         let submesh = mesh.submeshes.first! // temp
         // Draw the sphere
         renderEncoder.drawIndexedPrimitives(
