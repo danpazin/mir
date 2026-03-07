@@ -21,7 +21,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "Mir"
+            name: "Mir",
+            resources: [
+                .process("Shaders")
+            ]
         ),
         .testTarget(
             name: "MirTests",
