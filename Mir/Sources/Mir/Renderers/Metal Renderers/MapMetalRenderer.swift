@@ -48,7 +48,8 @@ final class MapMetalRenderer: Renderer {
             let commandBuffer = commandQueue?.makeCommandBuffer(),
             let renderPassDescriptor = view.currentRenderPassDescriptor,
             let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor),
-            let renderPipelineState
+            let renderPipelineState,
+            let drawable = view.currentDrawable
         else {
             return
         }
@@ -67,9 +68,6 @@ final class MapMetalRenderer: Renderer {
         ) // temp
         // Finalize the render pass
         renderEncoder.endEncoding()
-        /// A drawable from the view that the method renders the frame to.
-        let drawable = view.currentDrawable
-        guard let drawable else { return }
         // Instruct the drawable to show itself on the device's display when the render pass completes.
         commandBuffer.present(drawable)
         // Submit the command buffer to the GPU

@@ -63,7 +63,8 @@ final class MapMetal4Renderer: Renderer {
             let commandAllocator,
             let renderPipelineState,
             let argumentTable,
-            let commandQueue
+            let commandQueue,
+            let drawable = view.currentDrawable
         else {
             return
         }
@@ -94,9 +95,6 @@ final class MapMetal4Renderer: Renderer {
         renderEncoder.endEncoding()
         // End and submit the command buffer to the GPU
         commandBuffer.endCommandBuffer()
-        /// A drawable from the view that the method renders the frame to.
-        let drawable = view.currentDrawable
-        guard let drawable else { return }
         // Instruct the queue to wait until the drawable is ready to receive output from the render pass.
         commandQueue.waitForDrawable(drawable)
         // Run the command buffer on the GPU by submitting it the Metal device's queue.
