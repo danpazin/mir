@@ -1,15 +1,13 @@
-// Uniforms.h
+// MirTypes.h
 // Mir
 //
 // SPDX-License-Identifier: Apache-2.0
 // Copyright © 2026 Daniil Pazin. All rights reserved.
 //
 
-#ifndef Uniforms_h
-#define Uniforms_h
+#ifndef MirTypes_h
+#define MirTypes_h
 
-typedef struct {
-    
-} Uniforms;
+#include "Uniforms.h"
 
-#endif /* Uniforms_h */
+#endif /* MirTypes_h */
