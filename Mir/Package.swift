@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.3
 
 import PackageDescription
 
@@ -22,8 +22,10 @@ let package = Package(
     targets: [
         .target(
             name: "Mir",
+            dependencies: ["MirSharedTypes"],
             resources: [.process("Shaders")]
         ),
+        .target(name: "MirSharedTypes"),
         .testTarget(
             name: "MirTests",
             dependencies: ["Mir"]

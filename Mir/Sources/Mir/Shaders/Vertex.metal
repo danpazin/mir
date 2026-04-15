@@ -6,12 +6,22 @@
 //
 
 #include <metal_stdlib>
+#include "../../MirSharedTypes/include/Uniforms.h"
 using namespace metal;
 
 struct VertexIn {
     float4 position [[attribute(0)]];
 };
 
-vertex float4 vertexShader(const VertexIn vertexIn [[stage_in]]) {
-    return vertexIn.position;
+struct VertexOut {
+    float4 position [[position]];
+};
+
+vertex VertexOut vertexShader(
+                              const VertexIn vertexIn [[stage_in]],
+                              constant Uniforms &uniforms [[buffer(1)]]
+                              ) {
+    VertexOut out;
+    out.position = uniforms.projectionMatrix * uniforms.viewMatrix * uniforms.modelMatrix * vertexIn.position;
+    return out;
 }

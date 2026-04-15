@@ -16,7 +16,7 @@ extension MapMetal4Renderer {
     /// - Throws: An error if the Metal device cannot make the argument table.
     func makeArgumentTable() throws -> some MTL4ArgumentTable {
         let argumentTableDescriptor = MTL4ArgumentTableDescriptor()
-        argumentTableDescriptor.maxBufferBindCount = 1
+        argumentTableDescriptor.maxBufferBindCount = 2
         let argumentTable = try device.makeArgumentTable(descriptor: argumentTableDescriptor)
         return argumentTable
     }
@@ -33,8 +33,10 @@ extension MapMetal4Renderer {
     /// Sets up memory residency for the renderer's resources.
     func setUpResidency() {
         guard let residencySet,
-              let commandQueue else { return }
+              let commandQueue,
+              let uniformBuffer else { return }
         residencySet.addAllocation(mesh.vertexBuffers[0].buffer)
+        residencySet.addAllocation(uniformBuffer)
         residencySet.commit()
         commandQueue.addResidencySet(residencySet)
     }
