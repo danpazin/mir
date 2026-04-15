@@ -6,6 +6,7 @@
 //
 
 import MetalKit
+import MirSharedTypes
 
 final class MapMetal4Renderer: Renderer {
 
@@ -13,20 +14,24 @@ final class MapMetal4Renderer: Renderer {
 
     /// The Metal device used to create and manage GPU resources.
     let device: MTLDevice
-    // Temp
-    let mesh: MTKMesh!
     /// The command queue responsible for scheduling and submitting command buffers to the GPU.
     let commandQueue: (any MTL4CommandQueue)?
     /// The render pipeline state used to encode draw calls.
     var renderPipelineState: MTLRenderPipelineState?
     /// A residency set that keeps resources in memory for the app's lifetime.
     var residencySet: MTLResidencySet?
+    /// A shared buffer that holds the per-frame uniform data (matrices) for the vertex shader.
+    let uniformBuffer: MTLBuffer?
+    /// The scene that holds the camera and objects to render.
+    var scene = Scene()
     /// The current Metal 4 command buffer used to encode and submit GPU work for a frame.
     private let commandBuffer: MTL4CommandBuffer?
     /// An object that stores commands for each frame while the app encodes them and the GPU runs them.
     private let commandAllocator: MTL4CommandAllocator?
     /// An argument table that stores the resource bindings for a render encoder.
     private var argumentTable: MTL4ArgumentTable?
+    // temp
+    let mesh: MTKMesh!
 
     // MARK: - Initializers
 
@@ -35,18 +40,16 @@ final class MapMetal4Renderer: Renderer {
         commandQueue = device.makeMTL4CommandQueue()
         commandBuffer = device.makeCommandBuffer()
         commandAllocator = device.makeCommandAllocator()
+        uniformBuffer = device.makeBuffer(length: MemoryLayout<Uniforms>.stride, options: .storageModeShared)
 
-        // Temp
-        // 1
+        // temp
         let allocator = MTKMeshBufferAllocator(device: device)
-        // 2
         let mdlMesh = MDLMesh(
             sphereWithExtent: [0.75, 0.75, 0.75],
             segments: [30, 30],
             inwardNormals: false,
             geometryType: .triangles,
             allocator: allocator)
-        // 3
         let mesh = try! MTKMesh(mesh: mdlMesh, device: device)
         self.mesh = mesh
 
@@ -64,6 +67,7 @@ final class MapMetal4Renderer: Renderer {
             let renderPipelineState,
             let argumentTable,
             let commandQueue,
+            let uniformBuffer,
             let drawable = view.currentDrawable
         else {
             return
@@ -79,6 +83,15 @@ final class MapMetal4Renderer: Renderer {
         renderEncoder.setRenderPipelineState(renderPipelineState)
         // Bind vertex buffer GPU address at index 0 (matches shader layout)
         argumentTable.setAddress(mesh.vertexBuffers[0].buffer.gpuAddress, index: 0)
+        // Write current matrices into the uniform buffer
+        let uniforms = Uniforms(
+            modelMatrix: matrix_identity_float4x4,
+            viewMatrix: scene.camera.viewMatrix,
+            projectionMatrix: scene.camera.projectionMatrix
+        )
+        uniformBuffer.contents().storeBytes(of: uniforms, as: Uniforms.self)
+        // Bind uniform buffer at index 1
+        argumentTable.setAddress(uniformBuffer.gpuAddress, index: 1)
         renderEncoder.setArgumentTable(argumentTable, stages: .vertex)
         renderEncoder.setTriangleFillMode(.lines) // temp
         // Draw the first submesh (temporary)
