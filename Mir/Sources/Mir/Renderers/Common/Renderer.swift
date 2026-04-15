@@ -10,6 +10,9 @@ import MetalKit
 @MainActor
 protocol Renderer: AnyObject {
 
+    /// The scene that holds the camera and objects to render.
+    var scene: Scene { get set }
+
     // MARK: - Create a Render Pipeline
 
     /// Compiles (or recompiles) the Metal render pipeline state the renderer needs to draw.
