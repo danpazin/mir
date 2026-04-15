@@ -6,37 +6,37 @@
 //
 
 import MetalKit
+import MirSharedTypes
 
 final class MapMetalRenderer: Renderer {
     
     // MARK: - Properties
-    
+
     /// The Metal device used to create and manage GPU resources.
     let device: MTLDevice
     /// The render pipeline state used to encode draw calls.
     var renderPipelineState: MTLRenderPipelineState?
-    // Temp
-    let mesh: MTKMesh!
+    /// The scene that holds the camera and objects to render.
+    var scene = Scene()
     /// The command queue responsible for scheduling and submitting command buffers to the GPU.
     private let commandQueue: MTLCommandQueue?
-    
+    // temp
+    let mesh: MTKMesh!
+
     // MARK: - Initializers
     
     init(device: MTLDevice) {
         self.device = device
         commandQueue = device.makeCommandQueue()
         
-        // Temp
-        // 1
+        // temp
         let allocator = MTKMeshBufferAllocator(device: device)
-        // 2
         let mdlMesh = MDLMesh(
           sphereWithExtent: [0.75, 0.75, 0.75],
           segments: [30, 30],
           inwardNormals: false,
           geometryType: .triangles,
           allocator: allocator)
-        // 3
         let mesh = try! MTKMesh(mesh: mdlMesh, device: device)
         self.mesh = mesh
     }
@@ -55,6 +55,12 @@ final class MapMetalRenderer: Renderer {
         }
         // Configure the encoder with the renderer's main pipeline state.
         renderEncoder.setRenderPipelineState(renderPipelineState)
+        var uniforms = Uniforms(
+            modelMatrix: matrix_identity_float4x4,
+            viewMatrix: scene.camera.viewMatrix,
+            projectionMatrix: scene.camera.projectionMatrix
+        )
+        renderEncoder.setVertexBytes(&uniforms, length: MemoryLayout<Uniforms>.stride, index: 1)
         renderEncoder.setVertexBuffer(mesh.vertexBuffers[0].buffer, offset: 0, index: 0) // temp
         renderEncoder.setTriangleFillMode(.lines) // temp
         let submesh = mesh.submeshes.first! // temp
