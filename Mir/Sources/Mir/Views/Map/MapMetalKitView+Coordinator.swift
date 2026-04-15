@@ -2,7 +2,7 @@
 // Mir
 //
 // SPDX-License-Identifier: Apache-2.0
-// Copyright © 2025 Daniil Pazin. All rights reserved.
+// Copyright © 2026 Daniil Pazin. All rights reserved.
 //
 
 import MetalKit
@@ -65,7 +65,9 @@ extension MapMetalKitView {
 
         // MARK: - MTKViewDelegate
 
-        func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
+        func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
+            renderer?.scene.camera.aspectRatio = Float(size.width / size.height)
+        }
 
         /// A delegate method called for each frame to be rendered.
         ///
