@@ -10,6 +10,7 @@ struct Scene {
     // MARK: - Properties
 
     var camera: Camera
+    var globe: Globe
 
     // MARK: - Initializers
 
@@ -23,5 +24,6 @@ struct Scene {
             far: 100,
             aspectRatio: 1
         )
+        globe = Globe()
     }
 }
