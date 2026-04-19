@@ -22,6 +22,8 @@ final class MapMetal4Renderer: Renderer {
     var residencySet: MTLResidencySet?
     /// A shared buffer that holds the per-frame uniform data (matrices) for the vertex shader.
     let uniformBuffer: MTLBuffer?
+    /// A shared buffer that holds the vertex data for all globe patches, structured as a flat array of float3 positions.
+    let globeBuffer: MTLBuffer?
     /// The scene that holds the camera and objects to render.
     var scene = Scene()
     /// The current Metal 4 command buffer used to encode and submit GPU work for a frame.
@@ -30,8 +32,6 @@ final class MapMetal4Renderer: Renderer {
     private let commandAllocator: MTL4CommandAllocator?
     /// An argument table that stores the resource bindings for a render encoder.
     private var argumentTable: MTL4ArgumentTable?
-    // temp
-    let mesh: MTKMesh!
 
     // MARK: - Initializers
 
@@ -41,18 +41,7 @@ final class MapMetal4Renderer: Renderer {
         commandBuffer = device.makeCommandBuffer()
         commandAllocator = device.makeCommandAllocator()
         uniformBuffer = device.makeBuffer(length: MemoryLayout<Uniforms>.stride, options: .storageModeShared)
-
-        // temp
-        let allocator = MTKMeshBufferAllocator(device: device)
-        let mdlMesh = MDLMesh(
-            sphereWithExtent: [0.75, 0.75, 0.75],
-            segments: [30, 30],
-            inwardNormals: false,
-            geometryType: .triangles,
-            allocator: allocator)
-        let mesh = try! MTKMesh(mesh: mdlMesh, device: device)
-        self.mesh = mesh
-
+        globeBuffer = device.makeBuffer(length: MemoryLayout<InlineArray<3, SIMD3<Float>>>.stride * scene.globe.patches.count)
         argumentTable = try makeArgumentTable()
         residencySet = try makeResidencySet()
         setUpResidency()
@@ -68,6 +57,7 @@ final class MapMetal4Renderer: Renderer {
             let argumentTable,
             let commandQueue,
             let uniformBuffer,
+            let globeBuffer,
             let drawable = view.currentDrawable
         else {
             return
@@ -81,36 +71,37 @@ final class MapMetal4Renderer: Renderer {
               let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else { return }
         // Configure the encoder with the renderer's main pipeline state.
         renderEncoder.setRenderPipelineState(renderPipelineState)
-        // Bind vertex buffer GPU address at index 0 (matches shader layout)
-        argumentTable.setAddress(mesh.vertexBuffers[0].buffer.gpuAddress, index: 0)
-        // Write current matrices into the uniform buffer
+        // Write current matrices into the uniform buffer.
         let uniforms = Uniforms(
             modelMatrix: matrix_identity_float4x4,
             viewMatrix: scene.camera.viewMatrix,
             projectionMatrix: scene.camera.projectionMatrix
         )
         uniformBuffer.contents().storeBytes(of: uniforms, as: Uniforms.self)
-        // Bind uniform buffer at index 1
+        // Build a flat array of float3 vertex positions from all patches.
+        var vertices: [SIMD3<Float>] = []
+        vertices.reserveCapacity(scene.globe.patches.count * 3)
+        for i in scene.globe.patches.indices {
+            for j in scene.globe.patches[i].vertices.indices {
+                vertices.append(scene.globe.patches[i].vertices[j])
+            }
+        }
+        vertices.withUnsafeBytes { ptr in
+            globeBuffer.contents().copyMemory(from: ptr.baseAddress!, byteCount: ptr.count)
+        }
+        // Bind vertex buffer at index 0 and uniform buffer at index 1 via the argument table.
+        argumentTable.setAddress(globeBuffer.gpuAddress, index: 0)
         argumentTable.setAddress(uniformBuffer.gpuAddress, index: 1)
         renderEncoder.setArgumentTable(argumentTable, stages: .vertex)
-        renderEncoder.setTriangleFillMode(.lines) // temp
-        // Draw the first submesh (temporary)
-        if let submesh = mesh.submeshes.first {
-            renderEncoder.drawIndexedPrimitives(
-                primitiveType: .triangle,
-                indexCount: submesh.indexCount,
-                indexType: submesh.indexType,
-                indexBuffer: submesh.indexBuffer.buffer.gpuAddress,
-                indexBufferLength: submesh.indexBuffer.length
-            )
-        }
-        // Finalize the render pass
+        // Issue the draw call — one triangle per patch, 3 vertices each, all in one call.
+        renderEncoder.drawPrimitives(primitiveType: .triangle, vertexStart: 0, vertexCount: vertices.count)
+        // Finalize the render pass.
         renderEncoder.endEncoding()
-        // End and submit the command buffer to the GPU
+        // End and submit the command buffer to the GPU.
         commandBuffer.endCommandBuffer()
         // Instruct the queue to wait until the drawable is ready to receive output from the render pass.
         commandQueue.waitForDrawable(drawable)
-        // Run the command buffer on the GPU by submitting it the Metal device's queue.
+        // Run the command buffer on the GPU by submitting it to the Metal device's queue.
         commandQueue.commit([commandBuffer])
         // Notify the drawable that the GPU is done running the render pass.
         commandQueue.signalDrawable(drawable)

@@ -63,7 +63,6 @@ extension MapMetal4Renderer {
         renderPipelineDescriptor.vertexFunctionDescriptor = vertexFunctionDescriptor
         renderPipelineDescriptor.fragmentFunctionDescriptor = fragmentFunctionDescriptor
         renderPipelineDescriptor.colorAttachments[0].pixelFormat = colorPixelFormat
-        renderPipelineDescriptor.vertexDescriptor = MTKMetalVertexDescriptorFromModelIO(mesh.vertexDescriptor) // temp
         return renderPipelineDescriptor
     }
 
