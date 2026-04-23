@@ -71,6 +71,7 @@ final class MapMetal4Renderer: Renderer {
               let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else { return }
         // Configure the encoder with the renderer's main pipeline state.
         renderEncoder.setRenderPipelineState(renderPipelineState)
+        renderEncoder.setCullMode(.back)
         // Write current matrices into the uniform buffer.
         let uniforms = Uniforms(
             modelMatrix: matrix_identity_float4x4,

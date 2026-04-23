@@ -48,7 +48,8 @@ extension MapMetal4Renderer {
     /// - Loading the default Metal shader library
     /// - Setting up vertex and fragment shader function descriptors
     /// - Configuring the color attachment pixel format
-    /// - Setting the vertex descriptor from the mesh
+    ///
+    /// Vertex data layout is provided at draw time through argument-table buffer bindings.
     ///
     /// - Parameter colorPixelFormat: The pixel format for the color attachment.
     /// - Returns: A configured `MTL4RenderPipelineDescriptor` ready for pipeline making.

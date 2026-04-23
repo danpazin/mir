@@ -42,6 +42,7 @@ final class MapMetalRenderer: Renderer {
         }
         // Configure the encoder with the renderer's main pipeline state.
         renderEncoder.setRenderPipelineState(renderPipelineState)
+        renderEncoder.setCullMode(.back)
         var uniforms = Uniforms(
             modelMatrix: matrix_identity_float4x4,
             viewMatrix: scene.camera.viewMatrix,

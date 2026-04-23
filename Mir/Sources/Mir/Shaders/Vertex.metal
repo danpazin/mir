@@ -7,14 +7,11 @@
 
 #include <metal_stdlib>
 #include "../../MirSharedTypes/include/Uniforms.h"
+#include "VertexOut.h"
 using namespace metal;
 
 struct VertexIn {
     float3 position;
-};
-
-struct VertexOut {
-    float4 position [[position]];
 };
 
 vertex VertexOut vertexShader(
@@ -25,5 +22,6 @@ vertex VertexOut vertexShader(
     VertexOut out;
     float4 position = float4(vertices[vertexID], 1.0);
     out.position = uniforms.projectionMatrix * uniforms.viewMatrix * uniforms.modelMatrix * position;
+    out.normal = normalize(vertices[vertexID]);
     return out;
 }
