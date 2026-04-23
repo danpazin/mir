@@ -62,24 +62,19 @@ final class MapMetal4Renderer: Renderer {
         else {
             return
         }
-        // Prepare to use or reuse the allocator by resetting it.
         commandAllocator.reset()
-        // Prepare to use or reuse the command buffer for the frame's commands.
         commandBuffer.beginCommandBuffer(allocator: commandAllocator)
-        // Create a render pass encoder from the command buffer with the view's configuration.
         guard let renderPassDescriptor = view.currentMTL4RenderPassDescriptor,
               let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else { return }
-        // Configure the encoder with the renderer's main pipeline state.
         renderEncoder.setRenderPipelineState(renderPipelineState)
         renderEncoder.setCullMode(.back)
-        // Write current matrices into the uniform buffer.
         let uniforms = Uniforms(
             modelMatrix: matrix_identity_float4x4,
             viewMatrix: scene.camera.viewMatrix,
             projectionMatrix: scene.camera.projectionMatrix
         )
         uniformBuffer.contents().storeBytes(of: uniforms, as: Uniforms.self)
-        // Build a flat array of float3 vertex positions from all patches.
+        // Flatten patch vertices into contiguous GPU input expected by `vertexShader`.
         var vertices: [SIMD3<Float>] = []
         vertices.reserveCapacity(scene.globe.patches.count * 3)
         for i in scene.globe.patches.indices {
@@ -90,23 +85,15 @@ final class MapMetal4Renderer: Renderer {
         vertices.withUnsafeBytes { ptr in
             globeBuffer.contents().copyMemory(from: ptr.baseAddress!, byteCount: ptr.count)
         }
-        // Bind vertex buffer at index 0 and uniform buffer at index 1 via the argument table.
         argumentTable.setAddress(globeBuffer.gpuAddress, index: 0)
         argumentTable.setAddress(uniformBuffer.gpuAddress, index: 1)
         renderEncoder.setArgumentTable(argumentTable, stages: .vertex)
-        // Issue the draw call — one triangle per patch, 3 vertices each, all in one call.
         renderEncoder.drawPrimitives(primitiveType: .triangle, vertexStart: 0, vertexCount: vertices.count)
-        // Finalize the render pass.
         renderEncoder.endEncoding()
-        // End and submit the command buffer to the GPU.
         commandBuffer.endCommandBuffer()
-        // Instruct the queue to wait until the drawable is ready to receive output from the render pass.
         commandQueue.waitForDrawable(drawable)
-        // Run the command buffer on the GPU by submitting it to the Metal device's queue.
         commandQueue.commit([commandBuffer])
-        // Notify the drawable that the GPU is done running the render pass.
         commandQueue.signalDrawable(drawable)
-        // Instruct the drawable to show itself on the device's display when the render pass completes.
         drawable.present()
     }
 }

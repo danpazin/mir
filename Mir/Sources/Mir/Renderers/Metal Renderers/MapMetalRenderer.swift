@@ -40,7 +40,6 @@ final class MapMetalRenderer: Renderer {
         else {
             return
         }
-        // Configure the encoder with the renderer's main pipeline state.
         renderEncoder.setRenderPipelineState(renderPipelineState)
         renderEncoder.setCullMode(.back)
         var uniforms = Uniforms(
@@ -49,17 +48,13 @@ final class MapMetalRenderer: Renderer {
             projectionMatrix: scene.camera.projectionMatrix
         )
         renderEncoder.setVertexBytes(&uniforms, length: MemoryLayout<Uniforms>.stride, index: 1)
-        // Draw the globe.
         for i in scene.globe.patches.indices {
             var vertices = scene.globe.patches[i].vertices
             renderEncoder.setVertexBytes(&vertices, length: MemoryLayout<SIMD3<Float>>.stride * 3, index: 0)
             renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: vertices.count)
         }
-        // Finalize the render pass.
         renderEncoder.endEncoding()
-        // Instruct the drawable to show itself on the device's display when the render pass completes.
         commandBuffer.present(drawable)
-        // Submit the command buffer to the GPU.
         commandBuffer.commit()
     }
 }
