@@ -19,7 +19,7 @@ struct Scene {
             bearing: .degrees(0),
             pitch: 0,
             coordinate: .init(),
-            fov: 60,
+            fov: .degrees(60),
             near: 0.01,
             far: 100,
             zoom: 1,

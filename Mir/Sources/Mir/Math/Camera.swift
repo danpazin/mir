@@ -17,7 +17,7 @@ struct Camera {
     // MARK: - Position
 
     var position: SIMD3<Double> {
-        let referenceAltitude = globeRadius / sin(fov * 0.5) - globeRadius
+        let referenceAltitude = globeRadius / sin(fov.radians * 0.5) - globeRadius
         let altitude = referenceAltitude / pow(2, zoom)
         return target * (globeRadius + altitude)
     }
@@ -44,8 +44,8 @@ struct Camera {
 
     // MARK: - Lens
 
-    /// The vertical field of view, in radians.
-    var fov: Double
+    /// The vertical field of view.
+    var fov: Angle
     /// The distance to the near clipping plane, in world units.
     var near: Double
     /// The distance to the far clipping plane, in world units.
@@ -72,7 +72,7 @@ struct Camera {
     }
 
     var projectionMatrix: double4x4 {
-        let y = 1 / tan(fov * 0.5)
+        let y = 1 / tan(fov.radians * 0.5)
         let x = y / aspectRatio
         let z = far / (near - far)
         let w = (near * far) / (near - far)
