@@ -171,8 +171,7 @@ package final class MapMetal4Renderer: Renderer {
         }
         let frame = frameNumber + 1
         let framesInFlight = UInt64(Self.maxFramesInFlight)
-        // Usually the GPU finished that frame long ago, so check the event's value before paying for a wait.
-        if frame > framesInFlight, frameEvent.signaledValue < frame - framesInFlight {
+        if frame > framesInFlight {
             guard frameEvent.wait(untilSignaledValue: frame - framesInFlight, timeoutMS: 5_000) else {
                 throw RendererError.gpuTimeout
             }
