@@ -1,9 +1,9 @@
 {
   "about": "Per-frame work budgets. The counts are exact on every machine, so they are checked everywhere, including CI virtual machines. Budgets are ceilings for every frame after the first, which may do one-time uploads: when an optimization lands, lower the budget so the win can't quietly erode. Raising one needs a reason in the commit message.",
   "frames": [
-    { "renderer": "metal", "subdivisionLevel": 0, "maxDrawCalls": 20, "maxUploadedBytes": 1152 },
-    { "renderer": "metal", "subdivisionLevel": 4, "maxDrawCalls": 5120, "maxUploadedBytes": 245952 },
-    { "renderer": "metal", "subdivisionLevel": 6, "maxDrawCalls": 81920, "maxUploadedBytes": 3932352 },
+    { "renderer": "metal", "subdivisionLevel": 0, "maxDrawCalls": 1, "maxUploadedBytes": 192 },
+    { "renderer": "metal", "subdivisionLevel": 4, "maxDrawCalls": 1, "maxUploadedBytes": 192 },
+    { "renderer": "metal", "subdivisionLevel": 6, "maxDrawCalls": 1, "maxUploadedBytes": 192 },
     { "renderer": "metal4", "subdivisionLevel": 0, "maxDrawCalls": 1, "maxUploadedBytes": 192 },
     { "renderer": "metal4", "subdivisionLevel": 4, "maxDrawCalls": 1, "maxUploadedBytes": 192 },
     { "renderer": "metal4", "subdivisionLevel": 6, "maxDrawCalls": 1, "maxUploadedBytes": 192 }

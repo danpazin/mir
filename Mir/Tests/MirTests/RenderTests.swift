@@ -35,6 +35,12 @@ struct RenderTests {
         try expectLitNearSide(in: image)
     }
 
+    @Test("The Metal renderer rebuilds its vertex buffer when the globe's level changes")
+    func metalReuploadsChangedGlobe() throws {
+        let device = try #require(MTLCreateSystemDefaultDevice())
+        try expectReupload(with: MapMetalRenderer(device: device), on: device)
+    }
+
     @Test("The whole globe fits in the default view")
     func wholeGlobeFitsInDefaultView() throws {
         let device = try #require(MTLCreateSystemDefaultDevice())
@@ -53,23 +59,10 @@ struct RenderTests {
         try expectLitNearSide(in: image)
     }
 
-    /// The Metal 4 renderer uploads the globe only when it changes, so a stale upload would draw
-    /// the old globe, or overrun the vertex buffer.
     @Test("The Metal 4 renderer re-uploads the globe when its level changes", .enabled(if: supportsMetal4))
     func metal4ReuploadsChangedGlobe() throws {
         let device = try #require(MTLCreateSystemDefaultDevice())
-        let renderer = try MapMetal4Renderer(device: device)
-        try renderer.compileRenderPipeline(colorPixelFormat: .bgra8Unorm)
-        renderer.scene.camera.aspectRatio = 1
-        let target = try OffscreenTarget(device: device, width: Self.size, height: Self.size)
-        try renderer.renderFrame(into: target.texture)
-        renderer.scene.globe = Globe(subdivisionLevel: 2)
-        try renderer.renderFrame(into: target.texture)
-        // Uniforms are three 4×4 float matrices (192 bytes); vertices are 16-byte float3s.
-        let expectedBytes = 192 + renderer.scene.globe.patches.count * 3 * MemoryLayout<SIMD3<Float>>.stride
-        #expect(renderer.lastFrameStatistics.uploadedBytes == expectedBytes)
-        let image = RenderedImage(width: target.width, height: target.height, bytes: target.pixelBytes())
-        try expectLitNearSide(in: image)
+        try expectReupload(with: MapMetal4Renderer(device: device), on: device)
     }
 
     @Test("Both renderers draw the same image", .enabled(if: supportsMetal4))
@@ -92,6 +85,23 @@ struct RenderTests {
         let target = try OffscreenTarget(device: device, width: Self.size, height: Self.size)
         try renderer.renderFrame(into: target.texture)
         return RenderedImage(width: target.width, height: target.height, bytes: target.pixelBytes())
+    }
+
+    /// Renderers upload the globe only when it changes, so a stale upload would draw the old
+    /// globe, or overrun the vertex buffer. This changes the level after one frame and checks
+    /// that the next frame uploads the new vertices and still draws the lit globe.
+    private func expectReupload(with renderer: some Renderer, on device: MTLDevice) throws {
+        try renderer.compileRenderPipeline(colorPixelFormat: .bgra8Unorm)
+        renderer.scene.camera.aspectRatio = 1
+        let target = try OffscreenTarget(device: device, width: Self.size, height: Self.size)
+        try renderer.renderFrame(into: target.texture)
+        renderer.scene.globe = Globe(subdivisionLevel: 2)
+        try renderer.renderFrame(into: target.texture)
+        // Uniforms are three 4×4 float matrices (192 bytes); vertices are 16-byte float3s.
+        let expectedBytes = 192 + renderer.scene.globe.patches.count * 3 * MemoryLayout<SIMD3<Float>>.stride
+        #expect(renderer.lastFrameStatistics.uploadedBytes == expectedBytes)
+        let image = RenderedImage(width: target.width, height: target.height, bytes: target.pixelBytes())
+        try expectLitNearSide(in: image)
     }
 
     private func expectLitNearSide(in image: RenderedImage) throws {

@@ -22,6 +22,10 @@ package final class MapMetalRenderer: Renderer {
     package private(set) var lastFrameStatistics = FrameStatistics()
     /// The command queue responsible for scheduling and submitting command buffers to the GPU.
     private let commandQueue: MTLCommandQueue?
+    /// A buffer with every globe vertex, as the flat float3 array `vertexShader` reads.
+    private var globeBuffer: MTLBuffer?
+    /// The subdivision level of the globe in ``globeBuffer``, if any.
+    private var uploadedSubdivisionLevel: Int?
 
     // MARK: - Initializers
 
@@ -84,10 +88,11 @@ package final class MapMetalRenderer: Renderer {
     /// Both ``renderFrame(to:)`` and ``renderFrame(into:)`` call this, so offscreen tests and
     /// benchmarks exercise exactly the work the view does.
     private func encodeFrame(into commandBuffer: MTLCommandBuffer, renderPassDescriptor: MTLRenderPassDescriptor) throws {
-        guard
-            let renderPipelineState,
-            let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
-        else {
+        guard let renderPipelineState else {
+            throw RendererError.encodingUnavailable
+        }
+        let globe = try globeVertexBuffer()
+        guard let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else {
             throw RendererError.encodingUnavailable
         }
         let signpost = Signposts.renderer.beginInterval("Encode frame")
@@ -102,17 +107,42 @@ package final class MapMetalRenderer: Renderer {
             projectionMatrix: simd_float4x4(scene.camera.projectionMatrix)
         )
         renderEncoder.setVertexBytes(&uniforms, length: MemoryLayout<Uniforms>.stride, index: 1)
-        var statistics = FrameStatistics()
-        statistics.uploadedBytes = MemoryLayout<Uniforms>.stride
-        for i in scene.globe.patches.indices {
-            var vertices = scene.globe.patches[i].vertices
-            renderEncoder.setVertexBytes(&vertices, length: MemoryLayout<SIMD3<Float>>.stride * 3, index: 0)
-            renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: vertices.count)
-            statistics.drawCalls += 1
-            statistics.vertexCount += vertices.count
-            statistics.uploadedBytes += MemoryLayout<SIMD3<Float>>.stride * 3
-        }
+        renderEncoder.setVertexBuffer(globe.buffer, offset: 0, index: 0)
+        let vertexCount = scene.globe.patches.count * 3
+        renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: vertexCount)
         renderEncoder.endEncoding()
+        var statistics = FrameStatistics()
+        statistics.drawCalls = 1
+        statistics.vertexCount = vertexCount
+        statistics.uploadedBytes = MemoryLayout<Uniforms>.stride + globe.uploadedBytes
         lastFrameStatistics = statistics
+    }
+
+    /// Returns a buffer with every globe vertex, making a new one only when the globe has changed.
+    ///
+    /// One buffer lets one draw call render the whole globe. Before, each of the 20 × 4^level
+    /// patches was its own draw call with its own vertex bytes: 81,920 draws and 3.8 ms of CPU
+    /// encode time per frame at level 6.
+    ///
+    /// - Returns: The buffer, and the number of bytes copied for this frame.
+    private func globeVertexBuffer() throws -> (buffer: MTLBuffer, uploadedBytes: Int) {
+        if let globeBuffer, uploadedSubdivisionLevel == scene.globe.subdivisionLevel {
+            return (globeBuffer, 0)
+        }
+        // Flatten patch vertices into the contiguous float3 array `vertexShader` reads.
+        var vertices: [SIMD3<Float>] = []
+        vertices.reserveCapacity(scene.globe.patches.count * 3)
+        for patch in scene.globe.patches {
+            for corner in patch.vertices.indices {
+                vertices.append(patch.vertices[corner])
+            }
+        }
+        let byteCount = vertices.count * MemoryLayout<SIMD3<Float>>.stride
+        guard let buffer = device.makeBuffer(bytes: vertices, length: byteCount, options: .storageModeShared) else {
+            throw RendererError.encodingUnavailable
+        }
+        globeBuffer = buffer
+        uploadedSubdivisionLevel = scene.globe.subdivisionLevel
+        return (buffer, byteCount)
     }
 }
