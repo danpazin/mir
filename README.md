@@ -17,7 +17,7 @@ To save the frames the render tests draw as PNG files, pass a folder in `TEST_RU
 
 ## Benchmarks
 
-The benchmark suite renders offscreen with fixed inputs and records exact work counters, CPU counters and timings. It runs in Release builds, one JSON file per launch.
+See [BENCHMARKS.md](BENCHMARKS.md) for the design and results so far. The benchmark suite renders offscreen with fixed inputs and records exact work counters, CPU counters and timings. It runs in Release builds, one JSON file per launch.
 
 ```bash
 scripts/bench.sh --launches 5
