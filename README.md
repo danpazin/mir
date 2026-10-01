@@ -34,4 +34,4 @@ scripts/perf-ab.sh --base HEAD~1 --head HEAD
 
 ## Performance CI
 
-`.github/workflows/perf.yml` runs the A/B gate on a self-hosted Mac labelled `perf-m4pro`, only on pushes to this repository's branches and manual runs, never on pull requests. To set the runner up, add a macOS ARM64 runner in the repository's Settings → Actions → Runners with the extra label `perf-m4pro`, install it as a service with `./svc.sh install` so it runs in your logged-in session, and require approval for workflows from outside contributors.
+`.github/workflows/perf.yml` runs the A/B gate on a self-hosted Mac labelled `perf-m4pro`, only on pushes to this repository's branches and manual runs, never on pull requests. To set the runner up, add a macOS ARM64 runner in the repository's Settings → Actions → Runners with the extra label `perf-m4pro`, install it as a service with `./svc.sh install` so it runs in your logged-in session, require approval for workflows from outside contributors, then set the repository variable `PERF_RUNNER` to `enabled`. Until then the job is skipped.

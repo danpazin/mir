@@ -26,6 +26,8 @@ permissions:
 jobs:
   ab:
     name: Interleaved A/B on the M4 Pro
+    # Skipped until the runner exists: set the repository variable PERF_RUNNER to "enabled".
+    if: vars.PERF_RUNNER == 'enabled'
     runs-on: [self-hosted, macOS, ARM64, perf-m4pro]
     timeout-minutes: 45
     steps:
