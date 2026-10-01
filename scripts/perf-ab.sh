@@ -13,11 +13,14 @@
 # the two sides and exits 1 if any metric regressed.
 #
 # Usage: scripts/perf-ab.sh [--base REF] [--head REF] [--launches N] [--out DIR]
-#                           [--filter TEXT] [--frames N] [--report FILE]
+#                           [--filter TEXT] [--frames N] [--report FILE] [--repo DIR] [--tools REF]
 #   --base     the commit to compare against (default HEAD~1)
 #   --head     the commit under test (default HEAD)
 #   --launches launches per side (default 5; with 5 vs 5 the smallest p-value is 1/252)
 #   --report   also append the Markdown report to FILE, for example $GITHUB_STEP_SUMMARY
+#   --repo     the repository, when this script runs from a copy outside it (default: its parent)
+#   --tools    a commit whose Tools/MirBench and thresholds to use (default: the working copy),
+#              so a bisection judges every step with the same rules
 #
 # Exit codes: 0 no regression, 1 regression, 2 error, 3 base has no benchmarks to compare.
 
@@ -31,6 +34,7 @@ out=""
 filter=""
 frames=""
 report=""
+tools_ref=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -41,6 +45,8 @@ while [[ $# -gt 0 ]]; do
         --filter) filter="$2"; shift 2 ;;
         --frames) frames="$2"; shift 2 ;;
         --report) report="$2"; shift 2 ;;
+        --repo) repo="$(cd "$2" && pwd)"; shift 2 ;;
+        --tools) tools_ref="$2"; shift 2 ;;
         *) echo "Unknown option: $1" >&2; exit 2 ;;
     esac
 done
@@ -105,6 +111,10 @@ run_launch() {
 
 base_tree="$(worktree_for "$base")"
 head_tree="$(worktree_for "$head")"
+tools_tree="$repo"
+if [[ -n "$tools_ref" ]]; then
+    tools_tree="$(worktree_for "$(git -C "$repo" rev-parse --short "$tools_ref")")"
+fi
 if ! build "$base" "$base_tree"; then
     echo "Base $base has no benchmarks, so there is nothing to compare against."
     exit 3
@@ -122,8 +132,8 @@ for index in $(seq 1 "$launches"); do
     fi
 done
 
-compare=(swift run --quiet --package-path "$repo/Tools/MirBench" -c release mir-bench compare
-    --base "$out/base" --head "$out/head" --thresholds "$repo/benchmarks/thresholds.json")
+compare=(swift run --quiet --package-path "$tools_tree/Tools/MirBench" -c release mir-bench compare
+    --base "$out/base" --head "$out/head" --thresholds "$tools_tree/benchmarks/thresholds.json")
 if [[ -n "$report" ]]; then
     compare+=(--markdown "$report")
 fi
