@@ -119,6 +119,8 @@ package final class MapMetal4Renderer: Renderer {
             throw RendererError.encodingUnavailable
         }
         renderEncoder.setRenderPipelineState(renderPipelineState)
+        // Globe triangles wind counter-clockwise seen from outside; Metal treats clockwise as front-facing by default.
+        renderEncoder.setFrontFacing(.counterClockwise)
         renderEncoder.setCullMode(.back)
         let uniforms = Uniforms(
             modelMatrix: matrix_identity_float4x4,
