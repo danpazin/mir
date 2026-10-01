@@ -17,14 +17,17 @@ package final class MapMetalRenderer: Renderer {
     /// The render pipeline state used to encode draw calls.
     package var renderPipelineState: MTLRenderPipelineState?
     /// The scene that holds the camera and objects to render.
-    package var scene = Scene()
+    package var scene: Scene
+    /// The work the most recently encoded frame asked of the GPU.
+    package private(set) var lastFrameStatistics = FrameStatistics()
     /// The command queue responsible for scheduling and submitting command buffers to the GPU.
     private let commandQueue: MTLCommandQueue?
 
     // MARK: - Initializers
 
-    package init(device: MTLDevice) {
+    package init(device: MTLDevice, scene: Scene = Scene()) {
         self.device = device
+        self.scene = scene
         commandQueue = device.makeCommandQueue()
     }
 
@@ -87,11 +90,17 @@ package final class MapMetalRenderer: Renderer {
             projectionMatrix: simd_float4x4(scene.camera.projectionMatrix)
         )
         renderEncoder.setVertexBytes(&uniforms, length: MemoryLayout<Uniforms>.stride, index: 1)
+        var statistics = FrameStatistics()
+        statistics.uploadedBytes = MemoryLayout<Uniforms>.stride
         for i in scene.globe.patches.indices {
             var vertices = scene.globe.patches[i].vertices
             renderEncoder.setVertexBytes(&vertices, length: MemoryLayout<SIMD3<Float>>.stride * 3, index: 0)
             renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: vertices.count)
+            statistics.drawCalls += 1
+            statistics.vertexCount += vertices.count
+            statistics.uploadedBytes += MemoryLayout<SIMD3<Float>>.stride * 3
         }
         renderEncoder.endEncoding()
+        lastFrameStatistics = statistics
     }
 }

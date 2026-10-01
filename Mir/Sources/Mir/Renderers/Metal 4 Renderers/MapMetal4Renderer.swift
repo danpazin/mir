@@ -28,7 +28,9 @@ package final class MapMetal4Renderer: Renderer {
     /// A shared buffer that holds the vertex data for all globe patches, structured as a flat array of float3 positions.
     let globeBuffer: MTLBuffer?
     /// The scene that holds the camera and objects to render.
-    package var scene = Scene()
+    package var scene: Scene
+    /// The work the most recently encoded frame asked of the GPU.
+    package private(set) var lastFrameStatistics = FrameStatistics()
     /// The current Metal 4 command buffer used to encode and submit GPU work for a frame.
     private let commandBuffer: MTL4CommandBuffer?
     /// An object that stores commands for each frame while the app encodes them and the GPU runs them.
@@ -46,8 +48,10 @@ package final class MapMetal4Renderer: Renderer {
 
     // MARK: - Initializers
 
-    package init(device: MTLDevice) throws {
+    /// Makes a renderer whose vertex buffer fits the scene's globe.
+    package init(device: MTLDevice, scene: Scene = Scene()) throws {
         self.device = device
+        self.scene = scene
         commandQueue = device.makeMTL4CommandQueue()
         commandBuffer = device.makeCommandBuffer()
         commandAllocator = device.makeCommandAllocator()
@@ -157,6 +161,11 @@ package final class MapMetal4Renderer: Renderer {
         renderEncoder.drawPrimitives(primitiveType: .triangle, vertexStart: 0, vertexCount: vertices.count)
         renderEncoder.endEncoding()
         commandBuffer.endCommandBuffer()
+        var statistics = FrameStatistics()
+        statistics.drawCalls = 1
+        statistics.vertexCount = vertices.count
+        statistics.uploadedBytes = MemoryLayout<Uniforms>.stride + vertexByteCount
+        lastFrameStatistics = statistics
     }
 
     // MARK: - Residency

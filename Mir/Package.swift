@@ -28,7 +28,8 @@ let package = Package(
         .target(name: "MirSharedTypes"),
         .testTarget(
             name: "MirTests",
-            dependencies: ["Mir"]
+            dependencies: ["Mir"],
+            resources: [.process("Resources")]
         ),
     ]
 )
