@@ -39,6 +39,7 @@ jobs:
           xcodebuild test
           -scheme Mir
           -destination 'platform=macOS'
+          -skip-testing:MirBenchmarks
           -resultBundlePath "$RUNNER_TEMP/macOS.xcresult"
 
       - name: Upload results
@@ -66,6 +67,7 @@ jobs:
           xcodebuild test
           -scheme Mir
           -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5'
+          -skip-testing:MirBenchmarks
           -resultBundlePath "$RUNNER_TEMP/iOS-Simulator.xcresult"
 
       - name: Build for iOS devices

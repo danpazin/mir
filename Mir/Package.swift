@@ -31,5 +31,9 @@ let package = Package(
             dependencies: ["Mir"],
             resources: [.process("Resources")]
         ),
+        .testTarget(
+            name: "MirBenchmarks",
+            dependencies: ["Mir"]
+        ),
     ]
 )
