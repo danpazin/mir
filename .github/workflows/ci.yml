@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, perf-harness]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Pin the toolchain: results from different Xcode versions are never compared.
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+
+jobs:
+  macos:
+    name: macOS tests
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Describe the machine
+        run: |
+          xcodebuild -version
+          swift scripts/probe-environment.swift
+
+      - name: Test with Metal API validation
+        working-directory: Mir
+        env:
+          TEST_RUNNER_MTL_DEBUG_LAYER: "1"
+          TEST_RUNNER_MIR_TEST_OUTPUT_DIR: ${{ runner.temp }}/renders
+        run: >
+          xcodebuild test
+          -scheme Mir
+          -destination 'platform=macOS'
+          -resultBundlePath "$RUNNER_TEMP/macOS.xcresult"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-results
+          path: |
+            ${{ runner.temp }}/macOS.xcresult
+            ${{ runner.temp }}/renders
+          if-no-files-found: ignore
+
+  ios:
+    name: iOS simulator tests and device build
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Test on the iPhone 17 simulator
+        working-directory: Mir
+        env:
+          TEST_RUNNER_MIR_TEST_OUTPUT_DIR: ${{ runner.temp }}/renders
+        run: >
+          xcodebuild test
+          -scheme Mir
+          -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5'
+          -resultBundlePath "$RUNNER_TEMP/iOS-Simulator.xcresult"
+
+      - name: Build for iOS devices
+        working-directory: Mir
+        run: >
+          xcodebuild build
+          -scheme Mir
+          -destination 'generic/platform=iOS'
+          CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-results
+          path: |
+            ${{ runner.temp }}/iOS-Simulator.xcresult
+            ${{ runner.temp }}/renders
+          if-no-files-found: ignore
