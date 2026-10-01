@@ -136,6 +136,12 @@ package final class MapMetal4Renderer: Renderer {
                 vertices.append(scene.globe.patches[i].vertices[j])
             }
         }
+        let vertexByteCount = vertices.count * MemoryLayout<SIMD3<Float>>.stride
+        guard vertexByteCount <= globeBuffer.length else {
+            renderEncoder.endEncoding()
+            commandBuffer.endCommandBuffer()
+            throw RendererError.bufferTooSmall(needed: vertexByteCount, available: globeBuffer.length)
+        }
         vertices.withUnsafeBytes { ptr in
             globeBuffer.contents().copyMemory(from: ptr.baseAddress!, byteCount: ptr.count)
         }

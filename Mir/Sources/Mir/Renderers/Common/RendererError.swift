@@ -14,6 +14,7 @@ package enum RendererError: LocalizedError {
     case missingFragmentFunction(name: String)
     case textureUnavailable
     case encodingUnavailable
+    case bufferTooSmall(needed: Int, available: Int)
     case gpuTimeout
     case gpuFailure(description: String)
 
@@ -27,6 +28,8 @@ package enum RendererError: LocalizedError {
             return "The render target texture could not be created."
         case .encodingUnavailable:
             return "The frame could not be encoded: the render pipeline or a GPU resource is missing."
+        case .bufferTooSmall(let needed, let available):
+            return "The scene needs a \(needed)-byte vertex buffer, but the renderer has \(available) bytes."
         case .gpuTimeout:
             return "The GPU did not finish the frame in time."
         case .gpuFailure(let description):
