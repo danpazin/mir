@@ -5,6 +5,8 @@
 // Copyright © 2026 Daniil Pazin. All rights reserved.
 //
 
+#if !targetEnvironment(simulator)
+
 import Metal
 
 extension MapMetal4Renderer {
@@ -42,3 +44,4 @@ extension MapMetal4Renderer {
         commandQueue.addResidencySet(residencySet)
     }
 }
+#endif

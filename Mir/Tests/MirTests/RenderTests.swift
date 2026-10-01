@@ -25,8 +25,6 @@ struct RenderTests {
     /// The far side, seen from inside, would be about RGB(8, 23, 11).
     static let litCentre = RenderedImage.Color(red: 37, green: 111, blue: 56)
 
-    nonisolated static let supportsMetal4 = MTLCreateSystemDefaultDevice()?.supportsFamily(.metal4) ?? false
-
     // MARK: - Tests
 
     @Test("The Metal renderer shows the lit near side of the globe")
@@ -37,19 +35,22 @@ struct RenderTests {
         try expectLitNearSide(in: image)
     }
 
+    @Test("The whole globe fits in the default view")
+    func wholeGlobeFitsInDefaultView() throws {
+        let device = try #require(MTLCreateSystemDefaultDevice())
+        let image = try render(with: MapMetalRenderer(device: device), on: device)
+        #expect(image.edgePixelCount(excluding: .black) == 0, "The globe touches the edge of the frame")
+    }
+
+    #if !targetEnvironment(simulator)
+    nonisolated static let supportsMetal4 = MTLCreateSystemDefaultDevice()?.supportsFamily(.metal4) ?? false
+
     @Test("The Metal 4 renderer shows the lit near side of the globe", .enabled(if: supportsMetal4))
     func metal4RendererShowsLitNearSide() throws {
         let device = try #require(MTLCreateSystemDefaultDevice())
         let image = try render(with: MapMetal4Renderer(device: device), on: device)
         image.record(named: "metal4-default-scene")
         try expectLitNearSide(in: image)
-    }
-
-    @Test("The whole globe fits in the default view")
-    func wholeGlobeFitsInDefaultView() throws {
-        let device = try #require(MTLCreateSystemDefaultDevice())
-        let image = try render(with: MapMetalRenderer(device: device), on: device)
-        #expect(image.edgePixelCount(excluding: .black) == 0, "The globe touches the edge of the frame")
     }
 
     @Test("Both renderers draw the same image", .enabled(if: supportsMetal4))
@@ -61,6 +62,7 @@ struct RenderTests {
         #expect(difference.maxChannelDelta <= 2, "Channels differ by up to \(difference.maxChannelDelta)")
         #expect(difference.differingFraction <= 0.001, "\(difference.differingFraction * 100)% of pixels differ")
     }
+    #endif
 
     // MARK: - Helpers
 

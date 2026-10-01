@@ -5,6 +5,9 @@
 // Copyright © 2026 Daniil Pazin. All rights reserved.
 //
 
+// The Simulator SDK doesn't include Metal 4, so this renderer only builds for devices and Macs.
+#if !targetEnvironment(simulator)
+
 import MetalKit
 import MirSharedTypes
 
@@ -168,3 +171,4 @@ package final class MapMetal4Renderer: Renderer {
         offscreenTexture = texture
     }
 }
+#endif

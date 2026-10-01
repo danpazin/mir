@@ -5,6 +5,8 @@
 // Copyright © 2026 Daniil Pazin. All rights reserved.
 //
 
+#if !targetEnvironment(simulator)
+
 import MetalKit
 
 extension MapMetal4Renderer {
@@ -95,3 +97,4 @@ extension MapMetal4Renderer {
         return fragmentFunctionDescriptor
     }
 }
+#endif
