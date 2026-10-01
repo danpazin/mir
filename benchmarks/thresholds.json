@@ -1,0 +1,27 @@
+{
+  "about": "Acceptance criteria for `mir-bench compare`. Tier 1 = exact work counters, tier 2 = CPU counters, tier 3 = measured times and energy. A metric regresses when its median across launches grows past its tier's limit and, for tiers 2 and 3, the one-sided Mann-Whitney test across launches gives p < alpha. Changing a limit is a reviewed diff like any other.",
+  "alpha": 0.01,
+  "maxIncreasePercent": {
+    "1": 0,
+    "2": 2,
+    "3": 10
+  },
+  "metrics": {
+    "gpu": {
+      "gated": false,
+      "reason": "GPU time on small frames that wait for each other depends on the GPU's clock state; reported until its noise is measured"
+    },
+    "cycles": {
+      "gated": false,
+      "reason": "cycles move with clock speed; instructions are the CPU gate"
+    },
+    "energy": {
+      "gated": false,
+      "reason": "the OS estimates per-process energy; reported until its noise is measured"
+    },
+    "footprint": {
+      "gated": false,
+      "reason": "one-time driver allocations land in whichever memory benchmark runs first"
+    }
+  }
+}
