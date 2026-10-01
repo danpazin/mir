@@ -41,6 +41,8 @@ package final class MapMetal4Renderer: Renderer {
     private var frameEventValue: UInt64 = 0
     /// The offscreen texture currently in the residency set.
     private var offscreenTexture: MTLTexture?
+    /// The residency set of the view's layer, which keeps its drawables resident.
+    private var drawableResidencySet: MTLResidencySet?
 
     // MARK: - Initializers
 
@@ -68,6 +70,7 @@ package final class MapMetal4Renderer: Renderer {
         else {
             return
         }
+        makeDrawablesResident(for: view)
         do {
             try encodeFrame(renderPassDescriptor: renderPassDescriptor)
         } catch {
@@ -157,6 +160,25 @@ package final class MapMetal4Renderer: Renderer {
     }
 
     // MARK: - Residency
+
+    /// Adds the view's layer residency set to the command queue, replacing the previous view's set.
+    ///
+    /// Metal 4 only lets the GPU render into and present drawables whose resources are resident.
+    /// The layer keeps its residency set up to date as it creates new drawables.
+    private func makeDrawablesResident(for view: MTKView) {
+        guard
+            let commandQueue,
+            let layerResidencySet = (view.layer as? CAMetalLayer)?.residencySet,
+            layerResidencySet !== drawableResidencySet
+        else {
+            return
+        }
+        if let drawableResidencySet {
+            commandQueue.removeResidencySet(drawableResidencySet)
+        }
+        commandQueue.addResidencySet(layerResidencySet)
+        drawableResidencySet = layerResidencySet
+    }
 
     /// Adds an offscreen texture to the residency set, replacing the previous one.
     ///
