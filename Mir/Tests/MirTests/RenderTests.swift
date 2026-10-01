@@ -41,6 +41,12 @@ struct RenderTests {
         try expectReupload(with: MapMetalRenderer(device: device), on: device)
     }
 
+    @Test("The Metal renderer draws the lit globe when frames are pipelined")
+    func metalPipelinedFrames() throws {
+        let device = try #require(MTLCreateSystemDefaultDevice())
+        try expectPipelinedFramesLit(with: MapMetalRenderer(device: device), on: device)
+    }
+
     @Test("The whole globe fits in the default view")
     func wholeGlobeFitsInDefaultView() throws {
         let device = try #require(MTLCreateSystemDefaultDevice())
@@ -63,6 +69,14 @@ struct RenderTests {
     func metal4ReuploadsChangedGlobe() throws {
         let device = try #require(MTLCreateSystemDefaultDevice())
         try expectReupload(with: MapMetal4Renderer(device: device), on: device)
+    }
+
+    /// Frames in flight share one command buffer and cycle through three allocators and uniform
+    /// buffers; a mistake there shows up as a wrong or blank frame, or as a Metal validation error.
+    @Test("The Metal 4 renderer draws the lit globe with frames in flight", .enabled(if: supportsMetal4))
+    func metal4FramesInFlight() throws {
+        let device = try #require(MTLCreateSystemDefaultDevice())
+        try expectPipelinedFramesLit(with: MapMetal4Renderer(device: device), on: device)
     }
 
     @Test("Both renderers draw the same image", .enabled(if: supportsMetal4))
@@ -101,6 +115,17 @@ struct RenderTests {
         let expectedBytes = 192 + renderer.scene.globe.patches.count * 3 * MemoryLayout<SIMD3<Float>>.stride
         #expect(renderer.lastFrameStatistics.uploadedBytes == expectedBytes)
         let image = RenderedImage(width: target.width, height: target.height, bytes: target.pixelBytes())
+        try expectLitNearSide(in: image)
+    }
+
+    /// Draws 10 frames back to back into 3 targets, then checks the target the last frame drew.
+    private func expectPipelinedFramesLit(with renderer: some Renderer, on device: MTLDevice) throws {
+        try renderer.compileRenderPipeline(colorPixelFormat: .bgra8Unorm)
+        renderer.scene.camera.aspectRatio = 1
+        let targets = try (0..<3).map { _ in try OffscreenTarget(device: device, width: Self.size, height: Self.size) }
+        try renderer.renderFrames(10, into: targets.map(\.texture))
+        let last = targets[9 % targets.count]
+        let image = RenderedImage(width: last.width, height: last.height, bytes: last.pixelBytes())
         try expectLitNearSide(in: image)
     }
 

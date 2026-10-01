@@ -70,6 +70,11 @@ struct Benchmarks {
                 }
             }
         }
+        for renderer in renderers {
+            for size in frameSizes {
+                benchmarks.append(.throughput(renderer: renderer, size: size, subdivisionLevel: 6))
+            }
+        }
         for level in [4, 6] {
             benchmarks.append(.globeBuild(subdivisionLevel: level))
         }
@@ -214,6 +219,49 @@ struct Benchmark {
             }
             if let cycles = increase.cycles {
                 metrics.append(Metric(name: "cycles", unit: "per frame", tier: .cpuCounter, samples: [cycles]))
+            }
+            if let energy = increase.energyNanojoules {
+                metrics.append(Metric(name: "energy", unit: "µJ per frame", tier: .measured, samples: [energy / 1_000]))
+            }
+            return metrics
+        }
+    }
+
+    /// Renders frames back to back, as an export does, and reports the average time per frame.
+    ///
+    /// Unlike the frame benchmarks, the CPU encodes later frames while the GPU runs earlier ones
+    /// (up to three in flight), so this measures throughput rather than one frame's latency.
+    /// Each of five batches of frames gives one sample.
+    static func throughput(renderer: String, size: Resolution, subdivisionLevel: Int) -> Benchmark {
+        Benchmark(
+            name: "throughput/\(renderer)/\(size.name)/level\(subdivisionLevel)",
+            parameters: [
+                "renderer": renderer,
+                "width": "\(size.width)",
+                "height": "\(size.height)",
+                "subdivisionLevel": "\(subdivisionLevel)"
+            ]
+        ) { device, settings in
+            var scene = Scene()
+            scene.globe = Globe(subdivisionLevel: subdivisionLevel)
+            scene.camera.aspectRatio = Double(size.width) / Double(size.height)
+            let frameRenderer = try makeRenderer(named: renderer, device: device, scene: scene)
+            try frameRenderer.compileRenderPipeline(colorPixelFormat: .bgra8Unorm)
+            let targets = try (0..<3).map { _ in
+                try OffscreenTarget(device: device, width: size.width, height: size.height).texture
+            }
+            try frameRenderer.renderFrames(settings.warmupFrames, into: targets)
+            let batches = 5
+            var perFrame: [Double] = []
+            let before = ProcessCounters.current()
+            for _ in 0..<batches {
+                let seconds = try frameRenderer.renderFrames(settings.sampleFrames, into: targets)
+                perFrame.append(seconds / Double(settings.sampleFrames) * 1_000)
+            }
+            let increase = ProcessCounters.current().increase(since: before, per: batches * settings.sampleFrames)
+            var metrics = [Metric(name: "frame time", unit: "ms", tier: .measured, samples: perFrame)]
+            if let instructions = increase.instructions {
+                metrics.append(Metric(name: "instructions", unit: "per frame", tier: .cpuCounter, samples: [instructions]))
             }
             if let energy = increase.energyNanojoules {
                 metrics.append(Metric(name: "energy", unit: "µJ per frame", tier: .measured, samples: [energy / 1_000]))

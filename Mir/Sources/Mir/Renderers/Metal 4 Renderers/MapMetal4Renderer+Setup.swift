@@ -36,10 +36,11 @@ extension MapMetal4Renderer {
     func setUpResidency() {
         guard let residencySet,
               let commandQueue,
-              let uniformBuffer,
               let globeBuffer else { return }
         residencySet.addAllocation(globeBuffer)
-        residencySet.addAllocation(uniformBuffer)
+        for uniformBuffer in uniformBuffers {
+            residencySet.addAllocation(uniformBuffer)
+        }
         residencySet.commit()
         commandQueue.addResidencySet(residencySet)
     }

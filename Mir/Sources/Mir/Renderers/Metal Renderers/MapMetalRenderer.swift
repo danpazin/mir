@@ -61,12 +61,7 @@ package final class MapMetalRenderer: Renderer {
         guard let commandBuffer = commandQueue?.makeCommandBuffer() else {
             throw RendererError.encodingUnavailable
         }
-        let renderPassDescriptor = MTLRenderPassDescriptor()
-        renderPassDescriptor.colorAttachments[0].texture = texture
-        renderPassDescriptor.colorAttachments[0].loadAction = .clear
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
-        renderPassDescriptor.colorAttachments[0].storeAction = .store
-        try encodeFrame(into: commandBuffer, renderPassDescriptor: renderPassDescriptor)
+        try encodeFrame(into: commandBuffer, renderPassDescriptor: Self.offscreenPass(for: texture))
         let encoded = clock.now
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
@@ -79,6 +74,40 @@ package final class MapMetalRenderer: Renderer {
             gpuSeconds: commandBuffer.gpuEndTime - commandBuffer.gpuStartTime,
             totalSeconds: (finished - start).inSeconds
         )
+    }
+
+    @discardableResult
+    package func renderFrames(_ count: Int, into textures: [MTLTexture]) throws -> Double {
+        let clock = ContinuousClock()
+        let start = clock.now
+        guard !textures.isEmpty else {
+            throw RendererError.encodingUnavailable
+        }
+        // A queue runs its command buffers in order, so waiting for the last one waits for all.
+        var lastCommandBuffer: MTLCommandBuffer?
+        for index in 0..<count {
+            guard let commandBuffer = commandQueue?.makeCommandBuffer() else {
+                throw RendererError.encodingUnavailable
+            }
+            try encodeFrame(into: commandBuffer, renderPassDescriptor: Self.offscreenPass(for: textures[index % textures.count]))
+            commandBuffer.commit()
+            lastCommandBuffer = commandBuffer
+        }
+        lastCommandBuffer?.waitUntilCompleted()
+        if let error = lastCommandBuffer?.error {
+            throw RendererError.gpuFailure(description: error.localizedDescription)
+        }
+        return (clock.now - start).inSeconds
+    }
+
+    /// A render pass that clears an offscreen texture to black and keeps what is drawn.
+    private static func offscreenPass(for texture: MTLTexture) -> MTLRenderPassDescriptor {
+        let renderPassDescriptor = MTLRenderPassDescriptor()
+        renderPassDescriptor.colorAttachments[0].texture = texture
+        renderPassDescriptor.colorAttachments[0].loadAction = .clear
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
+        renderPassDescriptor.colorAttachments[0].storeAction = .store
+        return renderPassDescriptor
     }
 
     // MARK: - Encoding

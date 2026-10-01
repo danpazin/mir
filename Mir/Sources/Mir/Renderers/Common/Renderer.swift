@@ -43,4 +43,18 @@ package protocol Renderer: AnyObject {
     /// - Throws: ``RendererError`` if the frame can’t be encoded or the GPU doesn’t finish it.
     @discardableResult
     func renderFrame(into texture: MTLTexture) throws -> FrameTiming
+
+    /// Draws frames back to back, as an export does, and waits for the last one.
+    ///
+    /// Unlike ``renderFrame(into:)``, this doesn't wait for each frame: the CPU encodes the next
+    /// frames while the GPU runs earlier ones, so it measures throughput rather than latency.
+    ///
+    /// - Parameters:
+    ///   - count: The number of frames to draw.
+    ///   - textures: Render targets to cycle through; one per frame in flight avoids two frames
+    ///     writing the same texture at once.
+    /// - Returns: The wall-clock time for all the frames, in seconds.
+    /// - Throws: ``RendererError`` if a frame can’t be encoded or the GPU doesn’t finish in time.
+    @discardableResult
+    func renderFrames(_ count: Int, into textures: [MTLTexture]) throws -> Double
 }
