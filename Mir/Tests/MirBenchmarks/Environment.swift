@@ -41,7 +41,7 @@ struct EnvironmentInfo: Codable {
             cpu: sysctlString("machdep.cpu.brand_string"),
             os: process.operatingSystemVersionString,
             gpu: device.name,
-            supportsMetal4: device.supportsFamily(.metal4),
+            supportsMetal4: deviceSupportsMetal4(device),
             virtualMachine: sysctlInt("kern.hv_vmm_present") == 1,
             buildConfiguration: buildConfiguration,
             thermalStateAtStart: process.thermalState.name,
@@ -95,6 +95,15 @@ extension ProcessInfo.ThermalState {
 }
 
 // MARK: - System Queries
+
+/// Whether the device supports Metal 4. The Simulator SDK doesn't define the Metal 4 family.
+private func deviceSupportsMetal4(_ device: MTLDevice) -> Bool {
+    #if targetEnvironment(simulator)
+    return false
+    #else
+    return device.supportsFamily(.metal4)
+    #endif
+}
 
 private func sysctlString(_ name: String) -> String? {
     var size = 0
