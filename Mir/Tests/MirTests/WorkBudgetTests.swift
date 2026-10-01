@@ -60,6 +60,8 @@ struct WorkBudgetTests {
         let renderer = try makeRenderer(named: budget.renderer, device: device, scene: scene)
         try renderer.compileRenderPipeline(colorPixelFormat: .bgra8Unorm)
         let target = try OffscreenTarget(device: device, width: 64, height: 64)
+        // The first frame can include one-time uploads; budgets hold for every frame after it.
+        try renderer.renderFrame(into: target.texture)
         try renderer.renderFrame(into: target.texture)
         let statistics = renderer.lastFrameStatistics
         #expect(
