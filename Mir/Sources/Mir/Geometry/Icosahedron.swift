@@ -7,11 +7,11 @@
 
 import simd
 
-enum Icosahedron {
+package enum Icosahedron {
 
     // MARK: - Methods
 
-    static func makePatches() -> InlineArray<20, GlobePatch> {
+    package static func makePatches() -> InlineArray<20, GlobePatch> {
         let ϕ: Float = (1 + Float(5).squareRoot()) * 0.5
         let vertices: InlineArray<12, SIMD3<Float>> = [
             simd_normalize([-1,  ϕ,  0]), simd_normalize([ 1,  ϕ,  0]), simd_normalize([-1, -ϕ,  0]), simd_normalize([ 1, -ϕ,  0]),

@@ -8,7 +8,7 @@
 import MetalKit
 
 @MainActor
-protocol Renderer: AnyObject {
+package protocol Renderer: AnyObject {
 
     /// The scene that holds the camera and objects to render.
     var scene: Scene { get set }
@@ -29,4 +29,13 @@ protocol Renderer: AnyObject {
     ///   - A render pass descriptor that reflects the view's current configuration.
     ///   - A drawable instance that the renderer presents to the screen.
     func renderFrame(to view: MTKView)
+
+    /// Draws a frame into a texture and waits for the GPU to finish it.
+    ///
+    /// Tests and benchmarks use this to render without a window. It encodes the same commands
+    /// as ``renderFrame(to:)``, so what they check and measure is what the view shows.
+    ///
+    /// - Parameter texture: A render target texture, for example from ``OffscreenTarget``.
+    /// - Throws: ``RendererError`` if the frame can’t be encoded or the GPU doesn’t finish it.
+    func renderFrame(into texture: MTLTexture) throws
 }

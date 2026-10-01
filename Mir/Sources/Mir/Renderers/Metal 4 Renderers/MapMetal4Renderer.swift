@@ -8,16 +8,16 @@
 import MetalKit
 import MirSharedTypes
 
-final class MapMetal4Renderer: Renderer {
+package final class MapMetal4Renderer: Renderer {
 
     // MARK: - Properties
 
     /// The Metal device used to create and manage GPU resources.
-    let device: MTLDevice
+    package let device: MTLDevice
     /// The command queue responsible for scheduling and submitting command buffers to the GPU.
     let commandQueue: (any MTL4CommandQueue)?
     /// The render pipeline state used to encode draw calls.
-    var renderPipelineState: MTLRenderPipelineState?
+    package var renderPipelineState: MTLRenderPipelineState?
     /// A residency set that keeps resources in memory for the app's lifetime.
     var residencySet: MTLResidencySet?
     /// A shared buffer that holds the per-frame uniform data (matrices) for the vertex shader.
@@ -25,23 +25,30 @@ final class MapMetal4Renderer: Renderer {
     /// A shared buffer that holds the vertex data for all globe patches, structured as a flat array of float3 positions.
     let globeBuffer: MTLBuffer?
     /// The scene that holds the camera and objects to render.
-    var scene = Scene()
+    package var scene = Scene()
     /// The current Metal 4 command buffer used to encode and submit GPU work for a frame.
     private let commandBuffer: MTL4CommandBuffer?
     /// An object that stores commands for each frame while the app encodes them and the GPU runs them.
     private let commandAllocator: MTL4CommandAllocator?
     /// An argument table that stores the resource bindings for a render encoder.
     private var argumentTable: MTL4ArgumentTable?
+    /// An event the GPU signals when it finishes an offscreen frame.
+    private let frameEvent: MTLSharedEvent?
+    /// The value ``frameEvent`` reaches when the latest offscreen frame finishes.
+    private var frameEventValue: UInt64 = 0
+    /// The offscreen texture currently in the residency set.
+    private var offscreenTexture: MTLTexture?
 
     // MARK: - Initializers
 
-    init(device: MTLDevice) throws {
+    package init(device: MTLDevice) throws {
         self.device = device
         commandQueue = device.makeMTL4CommandQueue()
         commandBuffer = device.makeCommandBuffer()
         commandAllocator = device.makeCommandAllocator()
         uniformBuffer = device.makeBuffer(length: MemoryLayout<Uniforms>.stride, options: .storageModeShared)
         globeBuffer = device.makeBuffer(length: MemoryLayout<InlineArray<3, SIMD3<Float>>>.stride * scene.globe.patches.count)
+        frameEvent = device.makeSharedEvent()
         argumentTable = try makeArgumentTable()
         residencySet = try makeResidencySet()
         setUpResidency()
@@ -49,23 +56,68 @@ final class MapMetal4Renderer: Renderer {
 
     // MARK: - Renderer
 
-    func renderFrame(to view: MTKView) {
+    package func renderFrame(to view: MTKView) {
+        guard
+            let commandQueue,
+            let commandBuffer,
+            let renderPassDescriptor = view.currentMTL4RenderPassDescriptor,
+            let drawable = view.currentDrawable
+        else {
+            return
+        }
+        do {
+            try encodeFrame(renderPassDescriptor: renderPassDescriptor)
+        } catch {
+            return
+        }
+        commandQueue.waitForDrawable(drawable)
+        commandQueue.commit([commandBuffer])
+        commandQueue.signalDrawable(drawable)
+        drawable.present()
+    }
+
+    package func renderFrame(into texture: MTLTexture) throws {
+        guard let commandQueue, let commandBuffer, let frameEvent else {
+            throw RendererError.encodingUnavailable
+        }
+        makeResident(texture)
+        let renderPassDescriptor = MTL4RenderPassDescriptor()
+        renderPassDescriptor.colorAttachments[0].texture = texture
+        renderPassDescriptor.colorAttachments[0].loadAction = .clear
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
+        renderPassDescriptor.colorAttachments[0].storeAction = .store
+        try encodeFrame(renderPassDescriptor: renderPassDescriptor)
+        frameEventValue += 1
+        commandQueue.commit([commandBuffer])
+        commandQueue.signalEvent(frameEvent, value: frameEventValue)
+        guard frameEvent.wait(untilSignaledValue: frameEventValue, timeoutMS: 5_000) else {
+            throw RendererError.gpuTimeout
+        }
+    }
+
+    // MARK: - Encoding
+
+    /// Encodes the scene's draw calls into the command buffer.
+    ///
+    /// Both ``renderFrame(to:)`` and ``renderFrame(into:)`` call this, so offscreen tests and
+    /// benchmarks exercise exactly the work the view does.
+    private func encodeFrame(renderPassDescriptor: MTL4RenderPassDescriptor) throws {
         guard
             let commandBuffer,
             let commandAllocator,
             let renderPipelineState,
             let argumentTable,
-            let commandQueue,
             let uniformBuffer,
-            let globeBuffer,
-            let drawable = view.currentDrawable
+            let globeBuffer
         else {
-            return
+            throw RendererError.encodingUnavailable
         }
         commandAllocator.reset()
         commandBuffer.beginCommandBuffer(allocator: commandAllocator)
-        guard let renderPassDescriptor = view.currentMTL4RenderPassDescriptor,
-              let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else { return }
+        guard let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else {
+            commandBuffer.endCommandBuffer()
+            throw RendererError.encodingUnavailable
+        }
         renderEncoder.setRenderPipelineState(renderPipelineState)
         renderEncoder.setCullMode(.back)
         let uniforms = Uniforms(
@@ -91,9 +143,20 @@ final class MapMetal4Renderer: Renderer {
         renderEncoder.drawPrimitives(primitiveType: .triangle, vertexStart: 0, vertexCount: vertices.count)
         renderEncoder.endEncoding()
         commandBuffer.endCommandBuffer()
-        commandQueue.waitForDrawable(drawable)
-        commandQueue.commit([commandBuffer])
-        commandQueue.signalDrawable(drawable)
-        drawable.present()
+    }
+
+    // MARK: - Residency
+
+    /// Adds an offscreen texture to the residency set, replacing the previous one.
+    ///
+    /// Metal 4 only lets the GPU access resources in a residency set the queue knows about.
+    private func makeResident(_ texture: MTLTexture) {
+        guard let residencySet, offscreenTexture !== texture else { return }
+        if let offscreenTexture {
+            residencySet.removeAllocation(offscreenTexture)
+        }
+        residencySet.addAllocation(texture)
+        residencySet.commit()
+        offscreenTexture = texture
     }
 }

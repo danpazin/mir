@@ -6,11 +6,11 @@
 //
 
 /// The 3D globe model, built from a base icosahedron subdivided by LOD.
-struct Globe {
+package struct Globe {
 
     // MARK: - Properties
 
     /// The 20 root patches of the icosahedron base mesh.
-    let patches: InlineArray<20, GlobePatch> = Icosahedron.makePatches()
+    package let patches: InlineArray<20, GlobePatch> = Icosahedron.makePatches()
 }
 

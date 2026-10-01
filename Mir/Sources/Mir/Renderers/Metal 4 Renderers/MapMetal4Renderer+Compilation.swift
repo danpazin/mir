@@ -22,7 +22,7 @@ extension MapMetal4Renderer {
     ///   (typically `MTKView.colorPixelFormat`).
     /// - Throws: An error if Metal can’t create the pipeline state. Common reasons include missing shader
     ///   functions in the default library or an incompatible render pipeline descriptor.
-    func compileRenderPipeline(colorPixelFormat: MTLPixelFormat) throws {
+    package func compileRenderPipeline(colorPixelFormat: MTLPixelFormat) throws {
         let compiler = try makeCompiler()
         let renderPipelineDescriptor = try configureRenderPipeline(colorPixelFormat: colorPixelFormat)
         let renderPipelineState = try compiler.makeRenderPipelineState(descriptor: renderPipelineDescriptor)

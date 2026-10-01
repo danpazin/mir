@@ -5,16 +5,16 @@
 // Copyright © 2026 Daniil Pazin. All rights reserved.
 //
 
-struct Scene {
+package struct Scene {
 
     // MARK: - Properties
 
-    var camera: Camera
-    var globe: Globe
+    package var camera: Camera
+    package var globe: Globe
 
     // MARK: - Initializers
 
-    init() {
+    package init() {
         camera = Camera(
             bearing: .degrees(0),
             pitch: 0,

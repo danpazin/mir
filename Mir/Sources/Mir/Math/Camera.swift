@@ -10,26 +10,26 @@ import simd
 import SwiftUI
 
 /// A virtual camera that defines the point of view for rendering the globe.
-struct Camera {
+package struct Camera {
 
     private let globeRadius: Double = 1.0
 
     // MARK: - Position
 
-    var position: SIMD3<Double> {
+    package var position: SIMD3<Double> {
         let referenceAltitude = globeRadius / sin(fov.radians * 0.5) - globeRadius
         let altitude = referenceAltitude / pow(2, zoom)
         return target * (globeRadius + altitude)
     }
     /// Camera rotation.
-    var bearing: Angle
+    package var bearing: Angle
     /// Camera tilt angle.
-    var pitch: Double
+    package var pitch: Double
 
     // MARK: - Orientation
 
     /// The point in world space the camera is looking at.
-    var target: SIMD3<Double> {
+    package var target: SIMD3<Double> {
         let latitude = coordinate.latitude * .pi / 180.0
         let longitude = coordinate.longitude * .pi / 180.0
         let x = cos(latitude) * cos(longitude)
@@ -38,28 +38,28 @@ struct Camera {
         return SIMD3(x, y, z)
     }
     /// The world-space direction that the camera considers "up".
-    var up: SIMD3<Double> { SIMD3(0, 1, 0) }
+    package var up: SIMD3<Double> { SIMD3(0, 1, 0) }
     /// Location on Earth.
-    var coordinate: CLLocationCoordinate2D
+    package var coordinate: CLLocationCoordinate2D
 
     // MARK: - Lens
 
     /// The vertical field of view.
-    var fov: Angle
+    package var fov: Angle
     /// The distance to the near clipping plane, in world units.
-    var near: Double
+    package var near: Double
     /// The distance to the far clipping plane, in world units.
-    var far: Double
+    package var far: Double
     /// The distance of the map from the viewer.
-    var zoom: Double
+    package var zoom: Double
 
     // MARK: - Viewport
 
-    var aspectRatio: Double
+    package var aspectRatio: Double
 
     // MARK: - Matrices
 
-    var viewMatrix: double4x4 {
+    package var viewMatrix: double4x4 {
         let z = normalize(position - target)
         let x = normalize(cross(up, z))
         let y = cross(z, x)
@@ -71,7 +71,7 @@ struct Camera {
         ))
     }
 
-    var projectionMatrix: double4x4 {
+    package var projectionMatrix: double4x4 {
         let y = 1 / tan(fov.radians * 0.5)
         let x = y / aspectRatio
         let z = far / (near - far)
