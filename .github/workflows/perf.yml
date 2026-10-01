@@ -1,0 +1,92 @@
+name: Performance
+
+# Runs the interleaved A/B gate on a dedicated, self-hosted Mac.
+#
+# Never add a pull_request trigger: this job runs on a machine outside GitHub, the repository
+# is public, and a pull request from a fork could run anything on it. Pushes to this
+# repository's own branches and manual runs are the only triggers.
+
+on:
+  push:
+    branches: [main, develop, perf-harness]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Commit to compare against (default is the previous commit)
+        required: false
+
+concurrency:
+  group: perf-m4pro
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  ab:
+    name: Interleaved A/B on the M4 Pro
+    runs-on: [self-hosted, macOS, ARM64, perf-m4pro]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          # Keep build/, which caches one Release build per commit for later runs and bisection.
+          clean: false
+
+      - name: Describe the machine
+        run: swift scripts/probe-environment.swift
+
+      - name: Pick the base commit
+        id: base
+        env:
+          BEFORE: ${{ github.event.before }}
+          REQUESTED: ${{ inputs.base }}
+        run: |
+          base="${REQUESTED:-$BEFORE}"
+          if [[ -z "$base" || "$base" =~ ^0+$ ]] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            base="$(git rev-parse HEAD~1)"
+          fi
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Interleaved A/B
+        id: ab
+        env:
+          BASE: ${{ steps.base.outputs.sha }}
+        run: |
+          set +e
+          scripts/perf-ab.sh --base "$BASE" --head "$GITHUB_SHA" --out "$RUNNER_TEMP/ab" --report "$GITHUB_STEP_SUMMARY"
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [[ $status -eq 3 ]]; then
+            echo "The base commit has no benchmarks, so there is nothing to compare."
+            exit 0
+          fi
+          exit $status
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-ab-${{ github.sha }}
+          path: ${{ runner.temp }}/ab
+          if-no-files-found: ignore
+
+      - name: Open an issue for the regression
+        if: failure() && steps.ab.outputs.status == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ steps.base.outputs.sha }}
+        run: |
+          {
+            echo "The interleaved A/B gate found a regression between \`${BASE::7}\` and \`${GITHUB_SHA::7}\`."
+            echo
+            cat "$RUNNER_TEMP/ab/report.md"
+            echo
+            echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo "To find the culprit in a longer range, see scripts/bisect-perf.sh."
+          } > "$RUNNER_TEMP/issue.md"
+          gh label create perf-regression --color B60205 --description "Found by the performance gate" 2>/dev/null || true
+          gh issue create --title "Performance regression in ${GITHUB_SHA::7}" --label perf-regression --body-file "$RUNNER_TEMP/issue.md"

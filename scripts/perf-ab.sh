@@ -109,6 +109,8 @@ run_launch() {
             > "$out/logs/$side-$index.log" 2>&1) || { tail -30 "$out/logs/$side-$index.log"; exit 2; }
 }
 
+# Forget worktrees whose folders are gone, for example after build/ was deleted.
+git -C "$repo" worktree prune
 base_tree="$(worktree_for "$base")"
 head_tree="$(worktree_for "$head")"
 tools_tree="$repo"
