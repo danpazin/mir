@@ -22,7 +22,7 @@ package struct Scene {
             fov: .degrees(60),
             near: 0.01,
             far: 100,
-            zoom: 1,
+            zoom: -0.25,
             aspectRatio: 1
         )
         globe = Globe()

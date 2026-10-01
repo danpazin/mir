@@ -45,6 +45,13 @@ struct RenderTests {
         try expectLitNearSide(in: image)
     }
 
+    @Test("The whole globe fits in the default view")
+    func wholeGlobeFitsInDefaultView() throws {
+        let device = try #require(MTLCreateSystemDefaultDevice())
+        let image = try render(with: MapMetalRenderer(device: device), on: device)
+        #expect(image.edgePixelCount(excluding: .black) == 0, "The globe touches the edge of the frame")
+    }
+
     @Test("Both renderers draw the same image", .enabled(if: supportsMetal4))
     func renderersDrawTheSameImage() throws {
         let device = try #require(MTLCreateSystemDefaultDevice())

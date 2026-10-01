@@ -78,6 +78,21 @@ struct RenderedImage {
         return Double(covered) / Double(width * height)
     }
 
+    /// The number of pixels on the outermost rows and columns whose color differs from the background.
+    ///
+    /// Zero means whatever was drawn fits inside the frame.
+    func edgePixelCount(excluding background: Color) -> Int {
+        var count = 0
+        for y in 0..<height {
+            for x in 0..<width where x == 0 || y == 0 || x == width - 1 || y == height - 1 {
+                if color(atX: x, y: y).distance(to: background) > 0 {
+                    count += 1
+                }
+            }
+        }
+        return count
+    }
+
     /// Compares two images of the same size.
     ///
     /// - Returns: The largest difference in any channel, and the fraction of pixels that differ at all.
