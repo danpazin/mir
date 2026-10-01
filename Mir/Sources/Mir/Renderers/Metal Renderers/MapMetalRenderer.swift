@@ -50,7 +50,10 @@ package final class MapMetalRenderer: Renderer {
         commandBuffer.commit()
     }
 
-    package func renderFrame(into texture: MTLTexture) throws {
+    @discardableResult
+    package func renderFrame(into texture: MTLTexture) throws -> FrameTiming {
+        let clock = ContinuousClock()
+        let start = clock.now
         guard let commandBuffer = commandQueue?.makeCommandBuffer() else {
             throw RendererError.encodingUnavailable
         }
@@ -60,11 +63,18 @@ package final class MapMetalRenderer: Renderer {
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
         renderPassDescriptor.colorAttachments[0].storeAction = .store
         try encodeFrame(into: commandBuffer, renderPassDescriptor: renderPassDescriptor)
+        let encoded = clock.now
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
+        let finished = clock.now
         if let error = commandBuffer.error {
             throw RendererError.gpuFailure(description: error.localizedDescription)
         }
+        return FrameTiming(
+            encodeSeconds: (encoded - start).inSeconds,
+            gpuSeconds: commandBuffer.gpuEndTime - commandBuffer.gpuStartTime,
+            totalSeconds: (finished - start).inSeconds
+        )
     }
 
     // MARK: - Encoding
@@ -80,6 +90,8 @@ package final class MapMetalRenderer: Renderer {
         else {
             throw RendererError.encodingUnavailable
         }
+        let signpost = Signposts.renderer.beginInterval("Encode frame")
+        defer { Signposts.renderer.endInterval("Encode frame", signpost) }
         renderEncoder.setRenderPipelineState(renderPipelineState)
         // Globe triangles wind counter-clockwise seen from outside; Metal treats clockwise as front-facing by default.
         renderEncoder.setFrontFacing(.counterClockwise)

@@ -37,10 +37,6 @@ package final class MapMetal4Renderer: Renderer {
     private let commandAllocator: MTL4CommandAllocator?
     /// An argument table that stores the resource bindings for a render encoder.
     private var argumentTable: MTL4ArgumentTable?
-    /// An event the GPU signals when it finishes an offscreen frame.
-    private let frameEvent: MTLSharedEvent?
-    /// The value ``frameEvent`` reaches when the latest offscreen frame finishes.
-    private var frameEventValue: UInt64 = 0
     /// The offscreen texture currently in the residency set.
     private var offscreenTexture: MTLTexture?
     /// The residency set of the view's layer, which keeps its drawables resident.
@@ -57,7 +53,6 @@ package final class MapMetal4Renderer: Renderer {
         commandAllocator = device.makeCommandAllocator()
         uniformBuffer = device.makeBuffer(length: MemoryLayout<Uniforms>.stride, options: .storageModeShared)
         globeBuffer = device.makeBuffer(length: MemoryLayout<InlineArray<3, SIMD3<Float>>>.stride * scene.globe.patches.count)
-        frameEvent = device.makeSharedEvent()
         argumentTable = try makeArgumentTable()
         residencySet = try makeResidencySet()
         setUpResidency()
@@ -86,8 +81,11 @@ package final class MapMetal4Renderer: Renderer {
         drawable.present()
     }
 
-    package func renderFrame(into texture: MTLTexture) throws {
-        guard let commandQueue, let commandBuffer, let frameEvent else {
+    @discardableResult
+    package func renderFrame(into texture: MTLTexture) throws -> FrameTiming {
+        let clock = ContinuousClock()
+        let start = clock.now
+        guard let commandQueue, let commandBuffer else {
             throw RendererError.encodingUnavailable
         }
         makeResident(texture)
@@ -97,12 +95,23 @@ package final class MapMetal4Renderer: Renderer {
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
         renderPassDescriptor.colorAttachments[0].storeAction = .store
         try encodeFrame(renderPassDescriptor: renderPassDescriptor)
-        frameEventValue += 1
-        commandQueue.commit([commandBuffer])
-        commandQueue.signalEvent(frameEvent, value: frameEventValue)
-        guard frameEvent.wait(untilSignaledValue: frameEventValue, timeoutMS: 5_000) else {
+        let encoded = clock.now
+        let feedback = CommitFeedback()
+        let options = MTL4CommitOptions()
+        options.addFeedbackHandler { feedback.record($0) }
+        commandQueue.commit([commandBuffer], options: options)
+        guard let report = feedback.wait(timeoutSeconds: 5) else {
             throw RendererError.gpuTimeout
         }
+        let finished = clock.now
+        if let error = report.error {
+            throw RendererError.gpuFailure(description: error)
+        }
+        return FrameTiming(
+            encodeSeconds: (encoded - start).inSeconds,
+            gpuSeconds: report.gpuSeconds,
+            totalSeconds: (finished - start).inSeconds
+        )
     }
 
     // MARK: - Encoding
@@ -128,6 +137,8 @@ package final class MapMetal4Renderer: Renderer {
             commandBuffer.endCommandBuffer()
             throw RendererError.encodingUnavailable
         }
+        let signpost = Signposts.renderer.beginInterval("Encode frame")
+        defer { Signposts.renderer.endInterval("Encode frame", signpost) }
         renderEncoder.setRenderPipelineState(renderPipelineState)
         // Globe triangles wind counter-clockwise seen from outside; Metal treats clockwise as front-facing by default.
         renderEncoder.setFrontFacing(.counterClockwise)

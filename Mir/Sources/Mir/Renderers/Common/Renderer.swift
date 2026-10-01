@@ -39,6 +39,8 @@ package protocol Renderer: AnyObject {
     /// as ``renderFrame(to:)``, so what they check and measure is what the view shows.
     ///
     /// - Parameter texture: A render target texture, for example from ``OffscreenTarget``.
+    /// - Returns: How long the frame took to encode, to run on the GPU and in total.
     /// - Throws: ``RendererError`` if the frame can’t be encoded or the GPU doesn’t finish it.
-    func renderFrame(into texture: MTLTexture) throws
+    @discardableResult
+    func renderFrame(into texture: MTLTexture) throws -> FrameTiming
 }
