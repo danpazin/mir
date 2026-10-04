@@ -7,10 +7,12 @@ Mir's harness catches performance regressions per commit. It renders the globe o
 | Where | What runs | Gates on |
 | --- | --- | --- |
 | Every push and pull request, GitHub-hosted macOS 26 VM (`ci.yml`) | Environment probe; unit, camera and render tests with Metal API validation; work budgets; iPhone 17 simulator tests; iOS device build | Exact work counters and correctness |
-| Every push to this repository's branches, a dedicated M4 Pro (`perf.yml`) | `scripts/perf-ab.sh`: base and head interleaved, 5 launches each | All three tiers |
+| Every push to this repository's branches, a dedicated M4 Pro (`perf.yml`), once switched on | `scripts/perf-ab.sh`: base and head interleaved, 5 launches each | All three tiers |
 | By hand | `scripts/bench.sh`, `scripts/bisect-perf.sh`, `mir-bench summary` | — |
 
 Virtual machines get a paravirtual GPU and no CPU counters, so their timings are never gated.
+
+The M4 Pro job is built but not switched on yet. It is skipped until that Mac is registered as a self-hosted runner, as the README describes, so for now the gate runs by hand with `scripts/perf-ab.sh`.
 
 ## Metrics
 
