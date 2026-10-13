@@ -12,13 +12,9 @@ final class MapMetalRenderer: Renderer {
     
     // MARK: - Properties
 
-    /// The Metal device used to create and manage GPU resources.
     let device: MTLDevice
-    /// The render pipeline state used to encode draw calls.
     var renderPipelineState: MTLRenderPipelineState?
-    /// The scene that holds the camera and objects to render.
     var scene = Scene()
-    /// The command queue responsible for scheduling and submitting command buffers to the GPU.
     private let commandQueue: MTLCommandQueue?
 
     // MARK: - Initializers

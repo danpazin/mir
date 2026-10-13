@@ -12,11 +12,8 @@ final class MapMetal4Renderer: Renderer {
 
     // MARK: - Properties
 
-    /// The Metal device used to create and manage GPU resources.
     let device: MTLDevice
-    /// The command queue responsible for scheduling and submitting command buffers to the GPU.
     let commandQueue: (any MTL4CommandQueue)?
-    /// The render pipeline state used to encode draw calls.
     var renderPipelineState: MTLRenderPipelineState?
     /// A residency set that keeps resources in memory for the app's lifetime.
     var residencySet: MTLResidencySet?
@@ -24,13 +21,9 @@ final class MapMetal4Renderer: Renderer {
     let uniformBuffer: MTLBuffer?
     /// A shared buffer that holds the vertex data for all globe patches, structured as a flat array of float3 positions.
     let globeBuffer: MTLBuffer?
-    /// The scene that holds the camera and objects to render.
     var scene = Scene()
-    /// The current Metal 4 command buffer used to encode and submit GPU work for a frame.
     private let commandBuffer: MTL4CommandBuffer?
-    /// An object that stores commands for each frame while the app encodes them and the GPU runs them.
     private let commandAllocator: MTL4CommandAllocator?
-    /// An argument table that stores the resource bindings for a render encoder.
     private var argumentTable: MTL4ArgumentTable?
 
     // MARK: - Initializers
