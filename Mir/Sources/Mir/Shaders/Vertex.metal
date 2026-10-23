@@ -10,10 +10,6 @@
 #include "VertexOut.h"
 using namespace metal;
 
-struct VertexIn {
-    float3 position;
-};
-
 vertex VertexOut vertexShader(
                               uint vertexID [[vertex_id]],
                               constant float3 *vertices [[buffer(0)]],
