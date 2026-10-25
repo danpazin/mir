@@ -60,6 +60,7 @@ final class MapMetal4Renderer: Renderer {
         guard let renderPassDescriptor = view.currentMTL4RenderPassDescriptor,
               let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else { return }
         renderEncoder.setRenderPipelineState(renderPipelineState)
+        renderEncoder.setFrontFacing(.counterClockwise)
         renderEncoder.setCullMode(.back)
         let uniforms = Uniforms(
             modelMatrix: matrix_identity_float4x4,

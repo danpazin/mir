@@ -37,6 +37,7 @@ final class MapMetalRenderer: Renderer {
             return
         }
         renderEncoder.setRenderPipelineState(renderPipelineState)
+        renderEncoder.setFrontFacing(.counterClockwise)
         renderEncoder.setCullMode(.back)
         var uniforms = Uniforms(
             modelMatrix: matrix_identity_float4x4,
