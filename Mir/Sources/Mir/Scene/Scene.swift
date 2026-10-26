@@ -15,16 +15,7 @@ struct Scene {
     // MARK: - Initializers
 
     init() {
-        camera = Camera(
-            bearing: .degrees(0),
-            pitch: 0,
-            coordinate: .init(),
-            fov: .degrees(60),
-            near: 0.01,
-            far: 100,
-            zoom: 1,
-            aspectRatio: 1
-        )
+        camera = Camera()
         globe = Globe()
     }
 }

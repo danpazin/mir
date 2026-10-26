@@ -62,11 +62,7 @@ final class MapMetal4Renderer: Renderer {
         renderEncoder.setRenderPipelineState(renderPipelineState)
         renderEncoder.setFrontFacing(.counterClockwise)
         renderEncoder.setCullMode(.back)
-        let uniforms = Uniforms(
-            modelMatrix: matrix_identity_float4x4,
-            viewMatrix: simd_float4x4(scene.camera.viewMatrix),
-            projectionMatrix: simd_float4x4(scene.camera.projectionMatrix)
-        )
+        let uniforms = Uniforms(camera: scene.camera, drawableSize: view.drawableSize)
         uniformBuffer.contents().storeBytes(of: uniforms, as: Uniforms.self)
         // Flatten patch vertices into contiguous GPU input expected by `vertexShader`.
         var vertices: [SIMD3<Float>] = []
