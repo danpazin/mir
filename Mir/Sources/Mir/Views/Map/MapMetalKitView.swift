@@ -51,8 +51,7 @@ struct MapMetalKitView: UIViewRepresentable {
     // MARK: Providing a Custom Coordinator Object
 
     func makeCoordinator() -> Coordinator {
-        let coordinator = Coordinator()
-        return coordinator
+        .init()
     }
 }
 #elseif canImport(AppKit)
@@ -98,8 +97,7 @@ struct MapMetalKitView: NSViewRepresentable {
     // MARK: Providing a Custom Coordinator Object
 
     func makeCoordinator() -> Coordinator {
-        let coordinator = Coordinator()
-        return coordinator
+        .init()
     }
 }
 #endif

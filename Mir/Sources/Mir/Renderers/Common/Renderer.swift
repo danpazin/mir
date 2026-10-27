@@ -10,12 +10,14 @@ import MetalKit
 @MainActor
 protocol Renderer: AnyObject {
 
-    /// The scene that holds the camera and objects to render.
     var scene: Scene { get set }
 
     // MARK: - Create a Render Pipeline
 
     /// Compiles (or recompiles) the Metal render pipeline state the renderer needs to draw.
+    ///
+    /// Call this during setup and whenever the render target’s pixel format changes. Compilation is
+    /// expensive, so don’t call it from the per-frame rendering path.
     ///
     /// - Parameter colorPixelFormat: The pixel format of the render target’s color attachment
     ///   (typically `MTKView.colorPixelFormat`).

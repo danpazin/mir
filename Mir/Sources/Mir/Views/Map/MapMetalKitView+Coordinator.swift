@@ -15,9 +15,7 @@ extension MapMetalKitView {
 
         // MARK: - Properties
 
-        /// The Metal device used for rendering.
         private(set) var device: MTLDevice?
-        /// The renderer responsible for drawing the map.
         private(set) var renderer: (any Renderer)?
         /// An error that occurred during setup, if any.
         private(set) var error: MapError?
@@ -32,7 +30,6 @@ extension MapMetalKitView {
 
         // MARK: - Setting Up
 
-        /// Sets up the Metal device.
         private func setUpDevice() {
             guard let device = MTLCreateSystemDefaultDevice() else {
                 error = MapError(kind: .deviceUnavailable)
@@ -41,7 +38,6 @@ extension MapMetalKitView {
             self.device = device
         }
 
-        /// Sets up the renderer based on the device's capabilities.
         private func setUpRenderer() {
             guard let device else { return }
             if device.supportsFamily(.metal4) {
@@ -65,17 +61,8 @@ extension MapMetalKitView {
 
         // MARK: - MTKViewDelegate
 
-        func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-            renderer?.scene.camera.aspectRatio = Float(size.width / size.height)
-        }
+        func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
-        /// A delegate method called for each frame to be rendered.
-        ///
-        /// This method is part of the `MTKViewDelegate` protocol and is called
-        /// on every frame to draw the content of the view. It delegates the
-        /// rendering process to the `renderer`.
-        ///
-        /// - Parameter view: The `MTKView` to draw in.
         func draw(in view: MTKView) {
             renderer?.renderFrame(to: view)
         }
