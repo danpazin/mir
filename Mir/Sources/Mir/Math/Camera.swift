@@ -8,7 +8,7 @@
 import CoreFoundation
 import simd
 
-/// A virtual camera that defines the point of view for rendering the globe.
+/// A virtual camera that defines the point of view for rendering.
 struct Camera {
     
     // MARK: - Matrices
@@ -18,19 +18,25 @@ struct Camera {
         .translation(-position)
     }
     
-    /// Squeezes the longer side of the view, so the globe stays round.
+    /// Keeps what lies between `near` and `far`, and squeezes the longer side of the view so nothing looks stretched.
     func projectionMatrix(drawableSize: CGSize) -> double4x4 {
-        .scale(aspectCorrection(for: drawableSize))
+        .scale(aspectCorrection(for: drawableSize)) * .depthRange(near: near, far: far)
     }
     
     // MARK: - Placement
     
     /// Where the camera is, in world units.
     private var position: SIMD3<Double> {
-        .zero
+        SIMD3<Double>(x: 0.0, y: 0.0, z: 3.0)
     }
     
     // MARK: - Lens
+    
+    /// The closest distance the camera draws.
+    private let near = 0.1
+    
+    /// The farthest distance the camera draws.
+    private let far = 100.0
     
     /// The factors that make one unit cover the same number of pixels across and down.
     private func aspectCorrection(for size: CGSize) -> SIMD3<Double> {

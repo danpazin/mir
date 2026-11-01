@@ -20,4 +20,10 @@ extension double4x4 {
     static func scale(_ factor: SIMD3<Double>) -> double4x4 {
         double4x4(diagonal: SIMD4<Double>(factor, 1.0))
     }
+    
+    /// A matrix that maps distances from `near` to `far` in front of the camera, which looks along -z, into the GPU's depth range, 0 to 1.
+    static func depthRange(near: Double, far: Double) -> double4x4 {
+        let range = far - near
+        return scale(SIMD3<Double>(x: 1.0, y: 1.0, z: 1.0 / -range)) * translation(SIMD3<Double>(x: 0.0, y: 0.0, z: near))
+    }
 }
