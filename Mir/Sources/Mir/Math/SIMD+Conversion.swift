@@ -7,7 +7,7 @@
 
 import simd
 
-extension simd_float4x4 {
+extension float4x4 {
 
     /// Creates a single-precision matrix by downcasting each column of a double-precision matrix.
     ///
