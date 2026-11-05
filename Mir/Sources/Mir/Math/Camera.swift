@@ -18,9 +18,9 @@ struct Camera {
         .translation(-position)
     }
     
-    /// Keeps what lies between `near` and `far`, and squeezes the longer side of the view so nothing looks stretched.
+    /// Turns z around for the GPU, makes far things smaller, and squeezes the longer side of the view so nothing looks stretched.
     func projectionMatrix(drawableSize: CGSize) -> double4x4 {
-        .scale(aspectCorrection(for: drawableSize)) * .depthRange(near: near, far: far)
+        .scale(aspectCorrection(for: drawableSize)) * .perspective(near: near) * .rightToLeftHanded()
     }
     
     // MARK: - Placement
@@ -34,9 +34,6 @@ struct Camera {
     
     /// The closest distance the camera draws.
     private let near = 0.1
-    
-    /// The farthest distance the camera draws.
-    private let far = 100.0
     
     /// The factors that make one unit cover the same number of pixels across and down.
     private func aspectCorrection(for size: CGSize) -> SIMD3<Double> {
