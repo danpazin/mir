@@ -27,7 +27,7 @@ struct Camera {
     
     /// Where the camera is, in world units.
     private var position: SIMD3<Double> {
-        SIMD3<Double>(x: 0.0, y: 0.0, z: 1.5)
+        SIMD3<Double>(x: 0.0, y: 0.0, z: 3.0)
     }
     
     // MARK: - Lens

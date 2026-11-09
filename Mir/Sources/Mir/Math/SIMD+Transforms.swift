@@ -28,7 +28,7 @@ extension double4x4 {
         double4x4(diagonal: SIMD4<Double>(factor, 1.0))
     }
     
-    /// A matrix that makes far things smaller: it copies each point's distance, its z, into w, which the GPU divides by, so depth runs from 0 at `near` toward 1 at infinity.
+    /// A matrix that makes far things smaller: it copies each point's distance, its z, into w, which the GPU divides by.
     ///
     /// Each column is what one input coordinate adds to the output: column 2 is the point's z, column 3 is its 1.
     static func perspective() -> double4x4 {
