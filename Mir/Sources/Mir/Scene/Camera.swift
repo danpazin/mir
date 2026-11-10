@@ -18,9 +18,9 @@ struct Camera {
         .translation(-position)
     }
     
-    /// Turns z around for the GPU, makes far things smaller, and squeezes the longer side of the view so nothing looks stretched.
+    /// Turns z around for the GPU, makes far things smaller, magnifies them through the lens, and squeezes the longer side of the view so nothing looks stretched.
     func projectionMatrix(drawableSize: CGSize) -> double4x4 {
-        .scale(aspectCorrection(for: drawableSize)) * .perspective() * .rightToLeftHanded()
+        .scale(aspectCorrection(for: drawableSize) * lensMagnification) * .perspective() * .rightToLeftHanded()
     }
     
     // MARK: - Placement
@@ -31,6 +31,14 @@ struct Camera {
     }
     
     // MARK: - Lens
+    
+    /// The lens on the camera, which sets how wide it sees.
+    private let lens = Lens()
+    
+    /// The factors that make things look bigger through the lens, across and down, with depth left as it is.
+    private var lensMagnification: SIMD3<Double> {
+        SIMD3<Double>(x: lens.magnification, y: lens.magnification, z: 1.0)
+    }
     
     /// The factors that make one unit cover the same number of pixels across and down.
     private func aspectCorrection(for size: CGSize) -> SIMD3<Double> {
