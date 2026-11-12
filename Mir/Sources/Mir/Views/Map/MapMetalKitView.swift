@@ -19,13 +19,13 @@ struct MapMetalKitView: UIViewRepresentable {
         let coordinator = context.coordinator
         guard let device = coordinator.device else {
             let error = coordinator.error ?? MapError(kind: .deviceUnavailable)
-            let description = error.errorDescription ?? "Metal is not available on this device."
+            let description = error.localizedDescription
             let view = Self.makeErrorMTKView(message: description)
             return view
         }
         guard let renderer = coordinator.renderer else {
             let error = coordinator.error ?? MapError(kind: .rendererUnavailable)
-            let description = error.errorDescription ?? "The renderer could not be created."
+            let description = error.localizedDescription
             let view = Self.makeErrorMTKView(message: description)
             return view
         }
@@ -65,13 +65,13 @@ struct MapMetalKitView: NSViewRepresentable {
         let coordinator = context.coordinator
         guard let device = coordinator.device else {
             let error = coordinator.error ?? MapError(kind: .deviceUnavailable)
-            let description = error.errorDescription ?? "Metal is not available on this device."
+            let description = error.localizedDescription
             let view = Self.makeErrorMTKView(message: description)
             return view
         }
         guard let renderer = coordinator.renderer else {
             let error = coordinator.error ?? MapError(kind: .rendererUnavailable)
-            let description = error.errorDescription ?? "The renderer could not be created."
+            let description = error.localizedDescription
             let view = Self.makeErrorMTKView(message: description)
             return view
         }
