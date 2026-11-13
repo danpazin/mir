@@ -8,12 +8,18 @@
 import MetalKit
 import MirSharedTypes
 
+// The simulators' SDKs have no Metal 4 types, so this renderer is built only for devices and Macs.
+#if !targetEnvironment(simulator)
+/// Draws the map with the Metal 4 API, on devices and Macs whose GPU supports it.
 final class MapMetal4Renderer: Renderer {
 
     // MARK: - Properties
 
+    /// The GPU the renderer draws with.
     let device: MTLDevice
+    /// The queue that sends each frame's commands to the GPU.
     let commandQueue: (any MTL4CommandQueue)?
+    /// The compiled shaders and settings for drawing the globe, or nil until they're compiled.
     var renderPipelineState: MTLRenderPipelineState?
     /// A residency set that keeps resources in memory for the app's lifetime.
     var residencySet: MTLResidencySet?
@@ -21,13 +27,18 @@ final class MapMetal4Renderer: Renderer {
     let uniformBuffer: MTLBuffer?
     /// A shared buffer that holds the vertex data for all globe patches, structured as a flat array of float3 positions.
     let globeBuffer: MTLBuffer?
+    /// The camera and the globe to draw.
     var scene = Scene()
+    /// The command buffer that records every frame; there is only one.
     private let commandBuffer: MTL4CommandBuffer?
+    /// The memory the command buffer records into, reset at the start of every frame.
     private let commandAllocator: MTL4CommandAllocator?
+    /// Tells the vertex shader where the globe's vertices and the uniforms are in GPU memory.
     private var argumentTable: MTL4ArgumentTable?
 
     // MARK: - Initializers
 
+    /// Creates a renderer and its long-lived resources for the given GPU.
     init(device: MTLDevice) throws {
         self.device = device
         commandQueue = device.makeMTL4CommandQueue()
@@ -42,6 +53,7 @@ final class MapMetal4Renderer: Renderer {
 
     // MARK: - Renderer
 
+    /// Copies the uniforms and the globe's vertices to the GPU, draws every triangle in one draw call, and presents the frame.
     func renderFrame(to view: MTKView) {
         guard
             let commandBuffer,
@@ -87,3 +99,4 @@ final class MapMetal4Renderer: Renderer {
         drawable.present()
     }
 }
+#endif

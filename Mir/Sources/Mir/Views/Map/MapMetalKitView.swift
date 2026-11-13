@@ -9,93 +9,47 @@ import SwiftUI
 import MetalKit
 
 #if canImport(UIKit)
+/// A SwiftUI view that hosts the Metal view the map is drawn into.
 struct MapMetalKitView: UIViewRepresentable {
 
     // MARK: - UIViewRepresentable
 
     // MARK: Creating and Updating the View
 
+    /// Makes the Metal view that draws the map, or an error view if the map can't be drawn.
     func makeUIView(context: Context) -> some UIView {
-        let coordinator = context.coordinator
-        guard let device = coordinator.device else {
-            let error = coordinator.error ?? MapError(kind: .deviceUnavailable)
-            let description = error.errorDescription ?? "Metal is not available on this device."
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
-        guard let renderer = coordinator.renderer else {
-            let error = coordinator.error ?? MapError(kind: .rendererUnavailable)
-            let description = error.errorDescription ?? "The renderer could not be created."
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
-        let view = MTKView()
-        view.device = device
-        view.delegate = coordinator
-        do {
-            try renderer.compileRenderPipeline(colorPixelFormat: view.colorPixelFormat)
-            return view
-        } catch let error as LocalizedError {
-            let description = error.errorDescription ?? "Failed to set up map rendering: \(error.localizedDescription)"
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        } catch {
-            let description = "Failed to set up map rendering: \(error.localizedDescription)"
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
+        Self.makeMTKView(coordinator: context.coordinator)
     }
 
+    /// Does nothing, because the map doesn't depend on any SwiftUI state yet.
     func updateUIView(_ uiView: UIViewType, context: Context) {}
 
     // MARK: Providing a Custom Coordinator Object
 
+    /// Makes the coordinator that sets up Metal and draws each frame.
     func makeCoordinator() -> Coordinator {
         .init()
     }
 }
 #elseif canImport(AppKit)
+/// A SwiftUI view that hosts the Metal view the map is drawn into.
 struct MapMetalKitView: NSViewRepresentable {
 
     // MARK: - NSViewRepresentable
 
     // MARK: Creating and Updating the View
 
+    /// Makes the Metal view that draws the map, or an error view if the map can't be drawn.
     func makeNSView(context: Context) -> some NSView {
-        let coordinator = context.coordinator
-        guard let device = coordinator.device else {
-            let error = coordinator.error ?? MapError(kind: .deviceUnavailable)
-            let description = error.errorDescription ?? "Metal is not available on this device."
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
-        guard let renderer = coordinator.renderer else {
-            let error = coordinator.error ?? MapError(kind: .rendererUnavailable)
-            let description = error.errorDescription ?? "The renderer could not be created."
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
-        let view = MTKView()
-        view.device = device
-        view.delegate = coordinator
-        do {
-            try renderer.compileRenderPipeline(colorPixelFormat: view.colorPixelFormat)
-            return view
-        } catch let error as LocalizedError {
-            let description = error.errorDescription ?? "Failed to set up map rendering: \(error.localizedDescription)"
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        } catch {
-            let description = "Failed to set up map rendering: \(error.localizedDescription)"
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
+        Self.makeMTKView(coordinator: context.coordinator)
     }
 
+    /// Does nothing, because the map doesn't depend on any SwiftUI state yet.
     func updateNSView(_ nsView: NSViewType, context: Context) {}
 
     // MARK: Providing a Custom Coordinator Object
 
+    /// Makes the coordinator that sets up Metal and draws each frame.
     func makeCoordinator() -> Coordinator {
         .init()
     }

@@ -7,8 +7,11 @@
 
 import MetalKit
 
+// The simulators' SDKs have no Metal 4 types, so this renderer is built only for devices and Macs.
+#if !targetEnvironment(simulator)
 extension MapMetal4Renderer {
 
+    /// Compiles the shaders into the pipeline state used for drawing.
     func compileRenderPipeline(colorPixelFormat: MTLPixelFormat) throws {
         let compiler = try makeCompiler()
         let renderPipelineDescriptor = try configureRenderPipeline(colorPixelFormat: colorPixelFormat)
@@ -16,6 +19,7 @@ extension MapMetal4Renderer {
         self.renderPipelineState = renderPipelineState
     }
 
+    /// Makes the Metal 4 compiler that builds the pipeline.
     private func makeCompiler() throws -> some MTL4Compiler {
         let compilerDescriptor = MTL4CompilerDescriptor()
         let compiler = try device.makeCompiler(descriptor: compilerDescriptor)
@@ -34,6 +38,7 @@ extension MapMetal4Renderer {
         return renderPipelineDescriptor
     }
 
+    /// Names the vertex shader in the package's library.
     private func makeVertexShaderConfiguration(library: MTLLibrary) -> MTL4LibraryFunctionDescriptor {
         let vertexFunctionDescriptor = MTL4LibraryFunctionDescriptor()
         vertexFunctionDescriptor.library = library
@@ -41,6 +46,7 @@ extension MapMetal4Renderer {
         return vertexFunctionDescriptor
     }
 
+    /// Names the fragment shader in the package's library.
     private func makeFragmentShaderConfiguration(library: MTLLibrary) -> MTL4LibraryFunctionDescriptor {
         let fragmentFunctionDescriptor = MTL4LibraryFunctionDescriptor()
         fragmentFunctionDescriptor.library = library
@@ -48,3 +54,4 @@ extension MapMetal4Renderer {
         return fragmentFunctionDescriptor
     }
 }
+#endif

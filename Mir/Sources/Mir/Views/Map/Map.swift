@@ -18,8 +18,10 @@ import SwiftUI
 /// ```
 public struct Map: View {
     
+    /// Creates a map.
     public init() {}
     
+    /// The view that draws the map with Metal.
     public var body: some View {
         MapMetalKitView()
     }

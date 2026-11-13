@@ -5,12 +5,12 @@
 // Copyright © 2026 Daniil Pazin. All rights reserved.
 //
 
-/// The 3D globe model, built from a base icosahedron subdivided by LOD.
+/// The globe's surface, made of the 20 triangles of an icosahedron.
 struct Globe {
 
     // MARK: - Properties
 
-    /// The 20 root patches of the icosahedron base mesh.
+    /// The 20 triangles of the icosahedron.
     let patches: InlineArray<20, GlobePatch> = Icosahedron.makePatches()
 }
 

@@ -10,9 +10,12 @@ import Foundation
 /// Errors that can occur while configuring/compiling a renderer.
 enum RendererError: LocalizedError {
 
+    /// The shader library has no vertex function with this name.
     case missingVertexFunction(name: String)
+    /// The shader library has no fragment function with this name.
     case missingFragmentFunction(name: String)
 
+    /// A message that names the missing function.
     var errorDescription: String? {
         switch self {
         case .missingVertexFunction(let name):

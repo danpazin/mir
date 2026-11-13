@@ -7,9 +7,11 @@
 
 import MetalKit
 
+/// Something that draws the scene into a Metal view, implemented once with the classic Metal API and once with Metal 4.
 @MainActor
 protocol Renderer: AnyObject {
 
+    /// The camera and the globe to draw.
     var scene: Scene { get set }
 
     // MARK: - Create a Render Pipeline
