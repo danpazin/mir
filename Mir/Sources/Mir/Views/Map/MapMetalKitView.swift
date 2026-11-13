@@ -16,34 +16,7 @@ struct MapMetalKitView: UIViewRepresentable {
     // MARK: Creating and Updating the View
 
     func makeUIView(context: Context) -> some UIView {
-        let coordinator = context.coordinator
-        guard let device = coordinator.device else {
-            let error = coordinator.error ?? MapError(kind: .deviceUnavailable)
-            let description = error.localizedDescription
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
-        guard let renderer = coordinator.renderer else {
-            let error = coordinator.error ?? MapError(kind: .rendererUnavailable)
-            let description = error.localizedDescription
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
-        let view = MTKView()
-        view.device = device
-        view.delegate = coordinator
-        do {
-            try renderer.compileRenderPipeline(colorPixelFormat: view.colorPixelFormat)
-            return view
-        } catch let error as LocalizedError {
-            let description = error.errorDescription ?? "Failed to set up map rendering: \(error.localizedDescription)"
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        } catch {
-            let description = "Failed to set up map rendering: \(error.localizedDescription)"
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
+        Self.makeMTKView(coordinator: context.coordinator)
     }
 
     func updateUIView(_ uiView: UIViewType, context: Context) {}
@@ -62,34 +35,7 @@ struct MapMetalKitView: NSViewRepresentable {
     // MARK: Creating and Updating the View
 
     func makeNSView(context: Context) -> some NSView {
-        let coordinator = context.coordinator
-        guard let device = coordinator.device else {
-            let error = coordinator.error ?? MapError(kind: .deviceUnavailable)
-            let description = error.localizedDescription
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
-        guard let renderer = coordinator.renderer else {
-            let error = coordinator.error ?? MapError(kind: .rendererUnavailable)
-            let description = error.localizedDescription
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
-        let view = MTKView()
-        view.device = device
-        view.delegate = coordinator
-        do {
-            try renderer.compileRenderPipeline(colorPixelFormat: view.colorPixelFormat)
-            return view
-        } catch let error as LocalizedError {
-            let description = error.errorDescription ?? "Failed to set up map rendering: \(error.localizedDescription)"
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        } catch {
-            let description = "Failed to set up map rendering: \(error.localizedDescription)"
-            let view = Self.makeErrorMTKView(message: description)
-            return view
-        }
+        Self.makeMTKView(coordinator: context.coordinator)
     }
 
     func updateNSView(_ nsView: NSViewType, context: Context) {}
