@@ -8,17 +8,23 @@
 import MetalKit
 import MirSharedTypes
 
+/// Draws the map with the classic Metal API, for GPUs and simulators without Metal 4.
 final class MapMetalRenderer: Renderer {
     
     // MARK: - Properties
 
+    /// The GPU the renderer draws with.
     let device: MTLDevice
+    /// The compiled shaders and settings for drawing the globe, or nil until they're compiled.
     var renderPipelineState: MTLRenderPipelineState?
+    /// The camera and the globe to draw.
     var scene = Scene()
+    /// The queue that sends each frame's commands to the GPU.
     private let commandQueue: MTLCommandQueue?
 
     // MARK: - Initializers
     
+    /// Creates a renderer that draws with the given GPU.
     init(device: MTLDevice) {
         self.device = device
         commandQueue = device.makeCommandQueue()
@@ -26,6 +32,7 @@ final class MapMetalRenderer: Renderer {
     
     // MARK: - Renderer
     
+    /// Draws the globe into the view's next drawable, one triangle per draw call, and presents it.
     func renderFrame(to view: MTKView) {
         guard
             let commandBuffer = commandQueue?.makeCommandBuffer(),

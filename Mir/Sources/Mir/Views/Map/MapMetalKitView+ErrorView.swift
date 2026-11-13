@@ -9,6 +9,7 @@ import MetalKit
 
 extension MapMetalKitView {
     
+    /// Makes a paused Metal view that shows an error message instead of the map.
     static func makeErrorMTKView(message: String) -> MTKView {
         let view = MTKView()
         view.isPaused = true

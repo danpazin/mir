@@ -13,6 +13,7 @@ extension MapMetal4Renderer {
 
     // MARK: - Make Long-Term Resources
 
+    /// Makes an argument table with room for two buffers: the vertices and the uniforms.
     func makeArgumentTable() throws -> some MTL4ArgumentTable {
         let argumentTableDescriptor = MTL4ArgumentTableDescriptor()
         argumentTableDescriptor.maxBufferBindCount = 2
@@ -20,12 +21,14 @@ extension MapMetal4Renderer {
         return argumentTable
     }
 
+    /// Makes an empty residency set.
     func makeResidencySet() throws -> some MTLResidencySet {
         let residencySetDescriptor = MTLResidencySetDescriptor()
         let residencySet = try device.makeResidencySet(descriptor: residencySetDescriptor)
         return residencySet
     }
 
+    /// Adds both buffers to the residency set, so the GPU keeps them in memory, and attaches it to the command queue.
     func setUpResidency() {
         guard let residencySet,
               let commandQueue,

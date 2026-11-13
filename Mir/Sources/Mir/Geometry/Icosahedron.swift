@@ -7,10 +7,12 @@
 
 import simd
 
+/// The 20-sided shape the globe starts from: 12 corners on the unit sphere and 20 triangles between them.
 enum Icosahedron {
 
     // MARK: - Methods
 
+    /// Makes the 20 triangles, each wound counter-clockwise as seen from outside the globe.
     static func makePatches() -> InlineArray<20, GlobePatch> {
         let ϕ: Float = (1 + Float(5).squareRoot()) * 0.5
         let vertices: InlineArray<12, SIMD3<Float>> = [

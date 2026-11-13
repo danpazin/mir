@@ -9,12 +9,14 @@ import MetalKit
 
 extension MapMetalRenderer {
     
+    /// Compiles the shaders into the pipeline state used for drawing.
     func compileRenderPipeline(colorPixelFormat: MTLPixelFormat) throws {
         let renderPipelineDescriptor = try configureRenderPipeline(colorPixelFormat: colorPixelFormat)
         let renderPipelineState = try device.makeRenderPipelineState(descriptor: renderPipelineDescriptor)
         self.renderPipelineState = renderPipelineState
     }
     
+    /// Describes the pipeline: the vertex and fragment shaders from the package's library, and the view's pixel format.
     private func configureRenderPipeline(colorPixelFormat: MTLPixelFormat) throws -> MTLRenderPipelineDescriptor {
         let library = try device.makeDefaultLibrary(bundle: .module)
         guard let vertexFunction = library.makeFunction(name: "vertexShader") else {

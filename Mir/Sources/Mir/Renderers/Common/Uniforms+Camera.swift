@@ -10,6 +10,7 @@ import MirSharedTypes
 
 extension Uniforms {
     
+    /// Creates the shaders' uniforms from a camera, in the single precision the GPU uses, with the identity as the globe's model matrix.
     init(camera: Camera, drawableSize: CGSize) {
         self.init(
             modelMatrix: matrix_identity_float4x4,
