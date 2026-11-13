@@ -8,6 +8,8 @@
 import MetalKit
 import MirSharedTypes
 
+// The simulators' SDKs have no Metal 4 types, so this renderer is built only for devices and Macs.
+#if !targetEnvironment(simulator)
 final class MapMetal4Renderer: Renderer {
 
     // MARK: - Properties
@@ -87,3 +89,4 @@ final class MapMetal4Renderer: Renderer {
         drawable.present()
     }
 }
+#endif

@@ -7,6 +7,8 @@
 
 import Metal
 
+// The simulators' SDKs have no Metal 4 types, so this renderer is built only for devices and Macs.
+#if !targetEnvironment(simulator)
 extension MapMetal4Renderer {
 
     // MARK: - Make Long-Term Resources
@@ -35,3 +37,4 @@ extension MapMetal4Renderer {
         commandQueue.addResidencySet(residencySet)
     }
 }
+#endif

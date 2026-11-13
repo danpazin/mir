@@ -7,6 +7,8 @@
 
 import MetalKit
 
+// The simulators' SDKs have no Metal 4 types, so this renderer is built only for devices and Macs.
+#if !targetEnvironment(simulator)
 extension MapMetal4Renderer {
 
     func compileRenderPipeline(colorPixelFormat: MTLPixelFormat) throws {
@@ -48,3 +50,4 @@ extension MapMetal4Renderer {
         return fragmentFunctionDescriptor
     }
 }
+#endif

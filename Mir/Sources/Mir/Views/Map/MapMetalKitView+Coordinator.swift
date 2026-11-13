@@ -40,13 +40,19 @@ extension MapMetalKitView {
 
         private func setUpRenderer() {
             guard let device else { return }
+            #if targetEnvironment(simulator)
+            // The simulators have no Metal 4, so they always use the classic renderer.
+            setUpMetalRenderer(with: device)
+            #else
             if device.supportsFamily(.metal4) {
                 setUpMetal4Renderer(with: device)
             } else {
                 setUpMetalRenderer(with: device)
             }
+            #endif
         }
 
+        #if !targetEnvironment(simulator)
         private func setUpMetal4Renderer(with device: MTLDevice) {
             do {
                 renderer = try MapMetal4Renderer(device: device)
@@ -54,6 +60,7 @@ extension MapMetalKitView {
                 self.error = MapError(kind: .rendererUnavailable, underlyingError: error)
             }
         }
+        #endif
 
         private func setUpMetalRenderer(with device: MTLDevice) {
             renderer = MapMetalRenderer(device: device)
