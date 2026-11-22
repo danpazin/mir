@@ -18,7 +18,7 @@ struct Camera {
     /// Moves the world the opposite way to the camera, because the GPU always looks from the same spot.
     var viewMatrix: double4x4 {
         // The longitude turn runs first, and is negated to bring an eastern coordinate to the front.
-        .translation(-position)
+        .translation(SIMD3<Double>(x: 0.0, y: 0.0, z: -distance))
         * .rotationAroundX(Angle2D(degrees: coordinate.latitude))
         * .rotationAroundY(Angle2D(degrees: -coordinate.longitude))
     }
@@ -33,10 +33,8 @@ struct Camera {
     /// The latitude and longitude the camera looks from, toward the world's centre, in degrees, with north and east positive.
     var coordinate: CLLocationCoordinate2D
     
-    /// Where the camera is, in world units, once the world is turned so the camera's coordinate faces +z.
-    private var position: SIMD3<Double> {
-        SIMD3<Double>(x: 0.0, y: 0.0, z: 3.0)
-    }
+    /// How far the camera is from the world's centre, in world units.
+    var distance: Double
     
     // MARK: - Lens
     
