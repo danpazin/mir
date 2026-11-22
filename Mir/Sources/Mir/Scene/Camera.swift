@@ -6,6 +6,8 @@
 //
 
 import CoreFoundation
+import CoreLocation
+import Spatial
 import simd
 
 /// A virtual camera that defines the point of view for rendering.
@@ -15,7 +17,10 @@ struct Camera {
     
     /// Moves the world the opposite way to the camera, because the GPU always looks from the same spot.
     var viewMatrix: double4x4 {
-        .translation(-position)
+        // The longitude turn runs first, and is negated to bring an eastern coordinate to the front.
+        .translation(SIMD3<Double>(x: 0.0, y: 0.0, z: -distance))
+        * .rotationAroundX(Angle2D(degrees: coordinate.latitude))
+        * .rotationAroundY(Angle2D(degrees: -coordinate.longitude))
     }
     
     /// Turns z around for the GPU, makes far things smaller, magnifies them through the lens, and squeezes the longer side of the view so nothing looks stretched.
@@ -25,10 +30,11 @@ struct Camera {
     
     // MARK: - Placement
     
-    /// Where the camera is, in world units.
-    private var position: SIMD3<Double> {
-        SIMD3<Double>(x: 0.0, y: 0.0, z: 3.0)
-    }
+    /// The latitude and longitude the camera looks from, toward the world's centre, in degrees, with north and east positive.
+    var coordinate: CLLocationCoordinate2D
+    
+    /// How far the camera is from the world's centre, in world units.
+    var distance: Double
     
     // MARK: - Lens
     
