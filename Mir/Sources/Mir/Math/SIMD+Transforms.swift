@@ -5,6 +5,7 @@
 // Copyright © 2026 Daniil Pazin. All rights reserved.
 //
 
+import Spatial
 import simd
 
 extension double4x4 {
@@ -20,6 +21,22 @@ extension double4x4 {
     static func translation(_ offset: SIMD3<Double>) -> double4x4 {
         var matrix = matrix_identity_double4x4
         matrix.columns.3 = SIMD4<Double>(offset, 1.0)
+        return matrix
+    }
+    
+    /// A matrix that turns every point around the x axis by `angle`, by the right-hand rule: +y toward +z.
+    static func rotationAroundX(_ angle: Angle2D) -> double4x4 {
+        var matrix = matrix_identity_double4x4
+        matrix.columns.1 = SIMD4<Double>(x: 0.0, y: cos(angle), z: sin(angle), w: 0.0)
+        matrix.columns.2 = SIMD4<Double>(x: 0.0, y: -sin(angle), z: cos(angle), w: 0.0)
+        return matrix
+    }
+    
+    /// A matrix that turns every point around the y axis by `angle`, by the right-hand rule: +z toward +x.
+    static func rotationAroundY(_ angle: Angle2D) -> double4x4 {
+        var matrix = matrix_identity_double4x4
+        matrix.columns.0 = SIMD4<Double>(x: cos(angle), y: 0.0, z: -sin(angle), w: 0.0)
+        matrix.columns.2 = SIMD4<Double>(x: sin(angle), y: 0.0, z: cos(angle), w: 0.0)
         return matrix
     }
     

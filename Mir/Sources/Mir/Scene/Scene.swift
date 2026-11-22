@@ -19,7 +19,7 @@ struct Scene {
 
     /// Creates a scene with the default camera and the globe.
     init() {
-        camera = Camera()
+        camera = Camera(coordinate: .init(latitude: 0.0, longitude: 0.0))
         globe = Globe()
     }
 }
